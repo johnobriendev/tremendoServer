@@ -5,13 +5,19 @@ const { authenticateJWT } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.route('/')
-  .get(authenticateJWT, boardController.getBoards)
-  .post(authenticateJWT, boardController.createBoard);
+// Get all boards
+router.get('/', authenticateJWT, boardController.getBoards);
 
-router.route('/:id')
-  .get(authenticateJWT, boardController.getBoardById)
-  .put(authenticateJWT, boardController.updateBoard)
-  .delete(authenticateJWT, boardController.deleteBoard);
+// Create a new board
+router.post('/', authenticateJWT, boardController.createBoard);
+
+// Get a specific board by ID
+router.get('/:id', authenticateJWT, boardController.getBoardById);
+
+// Update a specific board
+router.put('/:id', authenticateJWT, boardController.updateBoard);
+
+// Delete a specific board
+router.delete('/:id', authenticateJWT, boardController.deleteBoard);
 
 module.exports = router;

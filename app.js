@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const routes = require('./routes');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,6 +19,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+//Routes
+app.use('/api', routes);
 
 
 // Every thrown error in the application or the previous middleware function calling `next` with an error as an argument will eventually go to this middleware function

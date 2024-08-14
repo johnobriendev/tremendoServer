@@ -27,7 +27,10 @@ mongoose.connect(process.env.MONGODB_URI, {
 app.use(cors());
 app.use(express.json());
 
-//Routes
+app.use(passport.initialize()); 
+require('./config/passport');
+
+
 // Routes
 app.use('/users', userRoutes);
 app.use('/boards', boardRoutes);

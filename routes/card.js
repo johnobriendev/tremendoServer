@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cardController = require('../controllers/cardController');
-const { authenticateJWT } = require('../middleware/authMiddleware');
+const { authenticateJWT } = require('../middleware/auth');
 
 // Get all cards within a specific board
 router.get('/:boardId/cards', authenticateJWT, cardController.getCards);

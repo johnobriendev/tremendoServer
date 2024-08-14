@@ -1,3 +1,4 @@
+const { body, validationResult } = require('express-validator');
 const Board = require('../models/Board');
 const asyncHandler = require('express-async-handler');
 
@@ -8,19 +9,29 @@ exports.getBoards = asyncHandler(async (req, res) => {
 });
 
 // Create a new board
-exports.createBoard = asyncHandler(async (req, res) => {
-  const { name, description, isPrivate } = req.body;
+exports.createBoard = [
+  body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
+  body('description').optional().isString().trim().escape(),
+  body('isPrivate').isBoolean().withMessage('isPrivate must be a boolean'),
 
-  const board = new Board({
-    name,
-    description,
-    isPrivate,
-    owner: req.user._id
-  });
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  await board.save();
-  res.status(201).json(board);
-});
+    const { name, description, isPrivate } = req.body;
+    const board = new Board({
+      name,
+      description,
+      isPrivate,
+      owner: req.user._id
+    });
+
+    await board.save();
+    res.status(201).json(board);
+  }),
+];
 
 // Get a specific board by ID
 exports.getBoardById = asyncHandler(async (req, res) => {
@@ -35,22 +46,34 @@ exports.getBoardById = asyncHandler(async (req, res) => {
 });
 
 // Update a specific board
-exports.updateBoard = asyncHandler(async (req, res) => {
-  const { name, description, isPrivate } = req.body;
-  const board = await Board.findById(req.params.id);
+exports.updateBoard = [
+  body('name').optional().isString().trim().escape(),
+  body('description').optional().isString().trim().escape(),
+  body('isPrivate').optional().isBoolean().withMessage('isPrivate must be a boolean'),
 
-  if (!board || board.owner.toString() !== req.user._id.toString()) {
-    res.status(404).json({ message: 'Board not found' });
-    return;
-  }
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  board.name = name || board.name;
-  board.description = description || board.description;
-  board.isPrivate = isPrivate !== undefined ? isPrivate : board.isPrivate;
+    const { name, description, isPrivate } = req.body;
+    const board = await Board.findById(req.params.id);
 
-  await board.save();
-  res.json(board);
-});
+    if (!board || board.owner.toString() !== req.user._id.toString()) {
+      res.status(404).json({ message: 'Board not found' });
+      return;
+    }
+
+    board.name = name || board.name;
+    board.description = description || board.description;
+    board.isPrivate = isPrivate !== undefined ? isPrivate : board.isPrivate;
+
+    await board.save();
+    res.json(board);
+  }),
+];
+
 
 // Delete a specific board
 exports.deleteBoard = asyncHandler(async (req, res) => {

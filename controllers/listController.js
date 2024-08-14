@@ -1,3 +1,4 @@
+const { body, validationResult } = require('express-validator');
 const List = require('../models/List');
 const asyncHandler = require('express-async-handler');
 
@@ -7,28 +8,48 @@ exports.getLists = asyncHandler(async (req, res) => {
   res.json(lists);
 });
 
-// Create a new list within a board
-exports.createList = asyncHandler(async (req, res) => {
-  const { name, position } = req.body;
-  const list = await List.create({
-    name,
-    boardId: req.params.boardId,
-    position,
-  });
-  res.status(201).json(list);
-});
+exports.createList = [
+  body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
+  body('position').isInt().withMessage('Position must be an integer'),
+
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name, position } = req.body;
+    const list = await List.create({
+      name,
+      boardId: req.params.boardId,
+      position,
+    });
+    res.status(201).json(list);
+  }),
+];
+
 
 // Update a specific list
-exports.updateList = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { name, position } = req.body;
-  const list = await List.findByIdAndUpdate(id, { name, position }, { new: true });
-  if (!list) {
-    res.status(404).json({ message: 'List not found' });
-  } else {
-    res.json(list);
-  }
-});
+exports.updateList = [
+  body('name').optional().isString().trim().escape(),
+  body('position').optional().isInt().withMessage('Position must be an integer'),
+
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { id } = req.params;
+    const { name, position } = req.body;
+    const list = await List.findByIdAndUpdate(id, { name, position }, { new: true });
+    if (!list) {
+      res.status(404).json({ message: 'List not found' });
+    } else {
+      res.json(list);
+    }
+  }),
+];
 
 // Delete a specific list and all associated cards
 exports.deleteList = asyncHandler(async (req, res) => {

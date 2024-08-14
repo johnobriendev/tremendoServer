@@ -1,12 +1,24 @@
+const { body, validationResult } = require('express-validator');
 const Card = require('../models/Card');
 const asyncHandler = require('express-async-handler');
 
 // Create a new card
-exports.createCard = asyncHandler(async (req, res) => {
-  const { boardId, listId, name, description, position } = req.body;
-  const card = await Card.create({ boardId, listId, name, description, position });
-  res.status(201).json(card);
-});
+exports.createCard = [
+  body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
+  body('description').optional().isString().trim().escape(),
+  body('position').isInt().withMessage('Position must be an integer'),
+
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { boardId, listId, name, description, position } = req.body;
+    const card = await Card.create({ boardId, listId, name, description, position });
+    res.status(201).json(card);
+  }),
+];
 
 // Get all cards
 exports.getCards = asyncHandler(async (req, res) => {
@@ -25,19 +37,30 @@ exports.getCardById = asyncHandler(async (req, res) => {
 });
 
 // Update a card
-exports.updateCard = asyncHandler(async (req, res) => {
-  const card = await Card.findById(req.params.id);
-  if (card) {
-    card.name = req.body.name || card.name;
-    card.description = req.body.description || card.description;
-    card.position = req.body.position || card.position;
-    card.updatedAt = Date.now();
-    await card.save();
-    res.json(card);
-  } else {
-    res.status(404).json({ message: 'Card not found' });
-  }
-});
+exports.updateCard = [
+  body('name').optional().isString().trim().escape(),
+  body('description').optional().isString().trim().escape(),
+  body('position').optional().isInt().withMessage('Position must be an integer'),
+
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const card = await Card.findById(req.params.id);
+    if (card) {
+      card.name = req.body.name || card.name;
+      card.description = req.body.description || card.description;
+      card.position = req.body.position || card.position;
+      card.updatedAt = Date.now();
+      await card.save();
+      res.json(card);
+    } else {
+      res.status(404).json({ message: 'Card not found' });
+    }
+  }),
+];
 
 // Delete a card
 exports.deleteCard = asyncHandler(async (req, res) => {

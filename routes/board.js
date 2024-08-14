@@ -1,7 +1,7 @@
 // routes/boardRoutes.js
 const express = require('express');
 const boardController = require('../controllers/boardController');
-const { authenticateJWT } = require('../middleware/authMiddleware');
+const { authenticateJWT } = require('../middleware/auth');
 
 const router = express.Router();
 

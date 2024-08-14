@@ -1,8 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const passport = require('passport');
 require('dotenv').config();
-const routes = require('./routes');
+
+
+// Import the routes
+const userRoutes = require('./routes/user');
+const boardRoutes = require('./routes/board');
+const listRoutes = require('./routes/list');
+const cardRoutes = require('./routes/card');
 
 
 const app = express();
@@ -21,7 +28,11 @@ app.use(cors());
 app.use(express.json());
 
 //Routes
-app.use('/api', routes);
+// Routes
+app.use('/users', userRoutes);
+app.use('/boards', boardRoutes);
+app.use('/lists', listRoutes);
+app.use('/cards', cardRoutes);
 
 
 // Every thrown error in the application or the previous middleware function calling `next` with an error as an argument will eventually go to this middleware function

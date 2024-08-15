@@ -21,7 +21,7 @@ exports.registerUser =[
     const { name, email, password } = req.body;
 
     // Check if user already exists
-    const userExists = await User.findOne({ username });
+    const userExists = await User.findOne({ email });//changed from username to email
     if (userExists) {
       res.status(400).json({ message: 'User already exists' });
       return;

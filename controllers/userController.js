@@ -7,16 +7,18 @@ const asyncHandler = require('express-async-handler');
 // get user data
 exports.getUserData = asyncHandler(async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming `req.user` is populated by Passport
-
-    const user = await User.findById(userId).select('-password'); // Exclude password
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(req.user._id).select('-password'); // Ensure you're excluding sensitive data
+    if (user) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Error fetching user data' });
   }
 });
 

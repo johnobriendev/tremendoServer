@@ -13,6 +13,7 @@ exports.createBoard = [
   body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
   body('description').optional().isString().trim().escape(),
   body('isPrivate').isBoolean().withMessage('isPrivate must be a boolean'),
+  body('backgroundColor').optional().isString().trim().escape(),
 
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -20,11 +21,12 @@ exports.createBoard = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, description, isPrivate } = req.body;
+    const { name, description, isPrivate, backgroundColor } = req.body;
     const board = new Board({
       name,
       description,
       isPrivate,
+      backgroundColor: backgroundColor || '#ffffff',
       owner: req.user._id
     });
 

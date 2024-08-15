@@ -31,6 +31,16 @@ exports.createBoard = [
     });
 
     await board.save();
+
+    // Create three default lists
+    const defaultLists = [
+      { name: 'To Do', boardId: board._id, position: 1 },
+      { name: 'In Progress', boardId: board._id, position: 2 },
+      { name: 'Done', boardId: board._id, position: 3 }
+    ];
+
+    await List.insertMany(defaultLists);
+
     res.status(201).json(board);
   }),
 ];

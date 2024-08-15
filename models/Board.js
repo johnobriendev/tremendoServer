@@ -6,6 +6,7 @@ const boardSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   isPrivate: { type: Boolean, default: true},
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  backgroundColor: { type: String, default: '#ffffff' },
 }, { timestamps: true });
 
 const Board = mongoose.model('Board', boardSchema);

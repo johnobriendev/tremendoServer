@@ -8,6 +8,7 @@ exports.getLists = asyncHandler(async (req, res) => {
   res.json(lists);
 });
 
+//create a list
 exports.createList = [
   body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
   body('position').isInt().withMessage('Position must be an integer'),

@@ -89,11 +89,14 @@ exports.updateBoard = [
 
 
 exports.deleteBoard = async (req, res) => {
+
   try {
     const board = await Board.findByIdAndDelete(req.params.id);
     if (!board) {
       return res.status(404).json({ message: 'Board not found' });
     }
+    // Delete associated lists
+    await List.deleteMany({ boardId: req.params.id });
     res.json({ message: 'Board deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting board' });

@@ -4,6 +4,7 @@ const asyncHandler = require('express-async-handler');
 
 // Create a new card
 exports.createCard = [
+  body('listId').notEmpty().withMessage('List ID is required').isString().trim().escape(),
   body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
   body('description').optional().isString().trim().escape(),
   body('position').isInt().withMessage('Position must be an integer'),
@@ -14,7 +15,8 @@ exports.createCard = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { boardId, listId, name, description, position } = req.body;
+    const { listId, name, description, position } = req.body;
+    const { boardId } = req.params;
     const card = await Card.create({ boardId, listId, name, description, position });
     res.status(201).json(card);
   }),

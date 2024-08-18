@@ -1,6 +1,7 @@
 const { body, validationResult } = require('express-validator');
 const Board = require('../models/Board');
 const List = require('../models/List');
+const Card = require("../models/Card");
 const asyncHandler = require('express-async-handler');
 
 // Get all boards for the authenticated user
@@ -95,22 +96,18 @@ exports.deleteBoard = async (req, res) => {
     if (!board) {
       return res.status(404).json({ message: 'Board not found' });
     }
+
+    const lists = await List.find({ boardId: req.params.id });
+    const listIds = lists.map(list => list._id);
+
+    // Delete associated cards
+    await Card.deleteMany({ listId: { $in: listIds } });
+
     // Delete associated lists
     await List.deleteMany({ boardId: req.params.id });
+
     res.json({ message: 'Board deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting board' });
   }
 };
-// // Delete a specific board
-// exports.deleteBoard = asyncHandler(async (req, res) => {
-//   const board = await Board.findById(req.params.id);
-
-//   if (!board || board.owner.toString() !== req.user._id.toString()) {
-//     res.status(404).json({ message: 'Board not found' });
-//     return;
-//   }
-
-//   await board.remove();
-//   res.json({ message: 'Board removed' });
-// });

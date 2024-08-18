@@ -1,5 +1,6 @@
 const { body, validationResult } = require('express-validator');
 const List = require('../models/List');
+const Card = require("../models/Card");
 const asyncHandler = require('express-async-handler');
 
 // Get all lists within a specific board
@@ -59,7 +60,9 @@ exports.deleteList = asyncHandler(async (req, res) => {
   if (!list) {
     res.status(404).json({ message: 'List not found' });
   } else {
-    // Optionally, can also delete all associated cards here
+   // Delete all associated cards
+   await Card.deleteMany({ listId: id });
+
     res.json({ message: 'List deleted' });
   }
 });

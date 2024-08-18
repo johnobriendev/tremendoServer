@@ -53,10 +53,14 @@ exports.updateCard = [
 
     const card = await Card.findById(req.params.id);
     if (card) {
-      card.name = req.body.name || card.name;
-      card.description = req.body.description || card.description;
-      card.position = req.body.position || card.position;
-      card.listId = req.body.listId || card.listId;
+      if (req.body.name !== undefined) card.name = req.body.name;
+      if (req.body.description !== undefined) card.description = req.body.description;
+      if (req.body.position !== undefined) card.position = req.body.position;
+      if (req.body.listId !== undefined) card.listId = req.body.listId;
+      // card.name = req.body.name || card.name;
+      // card.description = req.body.description || card.description;
+      // card.position = req.body.position || card.position;
+      // card.listId = req.body.listId || card.listId;
       card.updatedAt = Date.now();
       await card.save();
       res.json(card);

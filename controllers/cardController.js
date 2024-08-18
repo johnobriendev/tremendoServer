@@ -43,6 +43,7 @@ exports.updateCard = [
   body('name').optional().isString().trim().escape(),
   body('description').optional().isString().trim().escape(),
   body('position').optional().isInt().withMessage('Position must be an integer'),
+  body('listId').optional().isMongoId().withMessage('List ID must be a valid Mongo ID'),
 
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -55,6 +56,7 @@ exports.updateCard = [
       card.name = req.body.name || card.name;
       card.description = req.body.description || card.description;
       card.position = req.body.position || card.position;
+      card.listId = req.body.listId || card.listId;
       card.updatedAt = Date.now();
       await card.save();
       res.json(card);

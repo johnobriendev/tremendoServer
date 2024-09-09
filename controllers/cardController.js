@@ -5,7 +5,7 @@ const asyncHandler = require('express-async-handler');
 // Create a new card
 exports.createCard = [
   body('listId').notEmpty().withMessage('List ID is required').isString().trim().escape(),
-  body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
+  body('name').notEmpty().withMessage('Name is required').isString().trim(),
   body('description').optional().isString().trim().escape(),
   body('position').isInt().withMessage('Position must be an integer'),
 
@@ -38,9 +38,9 @@ exports.getCardById = asyncHandler(async (req, res) => {
   }
 });
 
-// Update a card
+// // Update a card
 exports.updateCard = [
-  body('name').optional().isString().trim().escape(),
+  body('name').optional().isString().trim(),
   body('description').optional().isString().trim().escape(),
   body('position').optional().isInt().withMessage('Position must be an integer'),
   body('listId').optional().isMongoId().withMessage('List ID must be a valid Mongo ID'),
@@ -52,34 +52,60 @@ exports.updateCard = [
     }
 
     const card = await Card.findById(req.params.id);
-    if (card) {
-      if (req.body.name !== undefined) card.name = req.body.name;
-      if (req.body.description !== undefined) card.description = req.body.description;
-      if (req.body.position !== undefined) card.position = req.body.position;
-      if (req.body.listId !== undefined) card.listId = req.body.listId;
-      // card.name = req.body.name || card.name;
-      // card.description = req.body.description || card.description;
-      // card.position = req.body.position || card.position;
-      // card.listId = req.body.listId || card.listId;
-      card.updatedAt = Date.now();
-      await card.save();
-      res.json(card);
-    } else {
-      res.status(404).json({ message: 'Card not found' });
+    if (!card) {
+      return res.status(404).json({ message: 'Card not found' });
     }
+
+    const originalListId = card.listId;
+    const originalPosition = card.position;
+
+    if (req.body.name !== undefined) card.name = req.body.name;
+    if (req.body.description !== undefined) card.description = req.body.description;
+    if (req.body.position !== undefined) card.position = req.body.position;
+    if (req.body.listId !== undefined) card.listId = req.body.listId;
+    card.updatedAt = Date.now();
+
+    await card.save();
+
+    // If position or listId changed, reorder cards
+    if (req.body.position !== undefined || req.body.listId !== undefined) {
+      // Reorder cards in the original list
+      if (originalListId !== card.listId || originalPosition !== card.position) {
+        await reorderCards(originalListId);
+      }
+
+      // If the card moved to a different list, reorder cards in the new list too
+      if (originalListId !== card.listId) {
+        await reorderCards(card.listId);
+      }
+    }
+
+    res.json(card);
   }),
 ];
 
+async function reorderCards(listId) {
+  const cardsInList = await Card.find({ listId }).sort('position');
+  for (let i = 0; i < cardsInList.length; i++) {
+    cardsInList[i].position = i + 1;
+    await cardsInList[i].save();
+  }
+}
+
+
+
 // Delete a card
 exports.deleteCard = asyncHandler(async (req, res) => {
-  const card = await Card.findById(req.params.id);
+  const { id } = req.params;
+  const card = await Card.findByIdAndDelete(id);
   if (card) {
-    await card.remove();
     res.json({ message: 'Card removed' });
   } else {
     res.status(404).json({ message: 'Card not found' });
   }
 });
+
+
 
 // Add a comment to a card
 exports.addComment = asyncHandler(async (req, res) => {

@@ -11,7 +11,7 @@ exports.getLists = asyncHandler(async (req, res) => {
 
 //create a list
 exports.createList = [
-  body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
+  body('name').notEmpty().withMessage('Name is required').isString().trim(),
   body('position').isInt().withMessage('Position must be an integer'),
 
   asyncHandler(async (req, res) => {
@@ -33,7 +33,7 @@ exports.createList = [
 
 // Update a specific list
 exports.updateList = [
-  body('name').optional().isString().trim().escape(),
+  body('name').optional().isString().trim(),
   body('position').optional().isInt().withMessage('Position must be an integer'),
 
   asyncHandler(async (req, res) => {

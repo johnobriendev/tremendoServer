@@ -12,7 +12,7 @@ exports.getBoards = asyncHandler(async (req, res) => {
 
 // Create a new board
 exports.createBoard = [
-  body('name').notEmpty().withMessage('Name is required').isString().trim().escape(),
+  body('name').notEmpty().withMessage('Name is required').isString().trim(),
   body('description').optional().isString().trim().escape(),
   body('isPrivate').isBoolean().withMessage('isPrivate must be a boolean'),
   body('backgroundColor').optional().isString().trim().escape(),
@@ -61,7 +61,7 @@ exports.getBoardById = asyncHandler(async (req, res) => {
 
 // Update a specific board
 exports.updateBoard = [
-  body('name').optional().isString().trim().escape(),
+  body('name').optional().isString().trim(),
   body('description').optional().isString().trim().escape(),
   body('isPrivate').optional().isBoolean().withMessage('isPrivate must be a boolean'),
 

@@ -31,7 +31,7 @@ exports.registerUser =[
   
   // Validation and sanitization
   body('name').optional().isString().trim().escape(),
-  body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
+  body('email').isEmail().withMessage('Please enter a valid email'), // take off .normalizeEmail() to allow periods
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
 
   asyncHandler(async (req, res) => {
@@ -175,11 +175,11 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email: decoded.email, verificationToken: token });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired verification token' });
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
     }
 
     if (user.isVerified) {
-      return res.status(400).json({ message: 'Email already verified' });
+      return res.status(400).json({ success: true, message: 'Email already verified' });
     }
 
     user.isVerified = true;
@@ -187,9 +187,9 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
     user.verificationTokenExpires = undefined;
     await user.save();
 
-    res.json({ message: 'Email verified successfully' });
+    res.status(200).json({ success: true, message: 'Email verified successfully' });
   } catch (error) {
-    res.status(400).json({ message: 'Email verification failed', error: error.message });
+    res.status(400).json({ success: false, message: 'Email verification failed', error: error.message });
   }
 });
 

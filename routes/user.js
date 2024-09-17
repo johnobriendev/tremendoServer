@@ -8,7 +8,7 @@ const registerLimiter = require('../middleware/rateLimiter');
 router.post('/register', registerLimiter, userController.registerUser);
 router.post('/login', userController.loginUser);
 router.post('/logout', userController.logoutUser);
-
+router.get('/verify-email', userController.verifyEmail);
 router.get('/', authenticateJWT, userController.getUserData);
 
 module.exports = router;

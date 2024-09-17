@@ -4,6 +4,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const axios = require('axios');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // get user data
 exports.getUserData = asyncHandler(async (req, res) => {
@@ -42,22 +45,41 @@ exports.registerUser =[
     // Check if user already exists
     const userExists = await User.findOne({ email });//changed from username to email
     if (userExists) {
-      res.status(400).json({ message: 'User already exists' });
-      return;
+      return res.status(400).json({ message: 'User already exists' });
+      
     }
+
+    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     // Create new user
     const user = await User.create({
       name,
       email,
       password: await bcrypt.hash(password, 10),
+      verificationToken,
+      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    });
+    try {
+      // Send verification email
+      await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: email,
+        subject: 'Verify Your Email',
+        html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
+      });
+
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        message: 'Registration successful. Please check your email to verify your account.',
+      });
+    } catch (error) {
+      // If email sending fails, delete the created user
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({ message: 'Registration failed. Unable to send verification email.' });
+    }
   })
 ];
 
@@ -143,6 +165,33 @@ exports.loginUser = [
     }
   })
 ];
+
+// Email verification
+exports.verifyEmail = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ email: decoded.email, verificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'Email already verified' });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    res.status(400).json({ message: 'Email verification failed', error: error.message });
+  }
+});
 
 // User logout
 exports.logoutUser = asyncHandler(async (req, res) => {

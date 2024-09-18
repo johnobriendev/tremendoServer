@@ -140,7 +140,7 @@ exports.registerUser =[
 // User login
 exports.loginUser = [
   // Validation and sanitization
-  body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
+  body('email').isEmail().withMessage('Please enter a valid email'), //.normalizeEmail(), allow periods in emails
   body('password').notEmpty().withMessage('Password is required'),
 
   // Controller logic
@@ -154,11 +154,20 @@ exports.loginUser = [
 
     const user = await User.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
+      if (!user.isVerified) {
+        return res.status(401).json({ message: 'Please verify your email before logging in' });
+      }
+      
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
         expiresIn: '1h',
       });
       res.json({
         token,
+        // user: {  
+        //   id: user._id,
+        //   name: user.name,
+        //   email: user.email
+        // } //not sure if this should be included
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -183,8 +192,8 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
     }
 
     user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
+    // user.verificationToken = undefined;  //take these out so the front end can see if the token has been verified
+    // user.verificationTokenExpires = undefined; //if the tokens are deleted the FE sees no token and throws error even though the verification was successful
     await user.save();
 
     res.status(200).json({ success: true, message: 'Email verified successfully' });

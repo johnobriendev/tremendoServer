@@ -9,6 +9,7 @@ router.post('/register', registerLimiter, userController.registerUser);
 router.post('/login', userController.loginUser);
 router.post('/logout', userController.logoutUser);
 router.get('/verify-email', userController.verifyEmail);
+router.post('/resend-verification', userController.resendVerification);
 router.get('/', authenticateJWT, userController.getUserData);
 
 module.exports = router;

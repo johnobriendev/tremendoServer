@@ -150,6 +150,41 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   }
 });
 
+exports.resendVerification = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (user.isVerified) {
+    return res.status(400).json({ message: 'Email already verified' });
+  }
+
+  // Generate a new verification token
+  const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+  
+  user.verificationToken = verificationToken;
+  user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  await user.save();
+
+  try {
+    // Send verification email
+    await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: email,
+      subject: 'Verify Your Email',
+      html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
+    });
+
+    res.status(200).json({ message: 'Verification email resent successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to resend verification email' });
+  }
+});
+
 // User logout
 exports.logoutUser = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Logout successful' });

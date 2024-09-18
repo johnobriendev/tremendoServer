@@ -63,7 +63,8 @@ exports.registerUser =[
     try {
       // Send verification email
       await resend.emails.send({
-        from: 'onboarding@resend.dev',
+        // from: 'onboarding@resend.dev',
+        from: 'support@tremendo.pro',
         to: email,
         subject: 'Verify Your Email',
         html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
@@ -173,7 +174,8 @@ exports.resendVerification = asyncHandler(async (req, res) => {
   try {
     // Send verification email
     await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      // from: 'onboarding@resend.dev',
+      from: 'support@tremendo.pro',
       to: email,
       subject: 'Verify Your Email',
       html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`

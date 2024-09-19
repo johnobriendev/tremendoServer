@@ -7,6 +7,8 @@ const registerLimiter = require('../middleware/rateLimiter');
 
 router.post('/register', registerLimiter, userController.registerUser);
 router.post('/login', userController.loginUser);
+router.post('/request-password-reset', userController.requestPasswordReset);
+router.post('/reset-password', userController.resetPassword);
 router.post('/logout', userController.logoutUser);
 router.get('/verify-email', userController.verifyEmail);
 router.post('/resend-verification', userController.resendVerification);

@@ -85,45 +85,6 @@ exports.registerUser =[
 ];
 
 
-
-// User login
-exports.loginUser = [
-  // Validation and sanitization
-  body('email').isEmail().withMessage('Please enter a valid email'), //.normalizeEmail(), allow periods in emails
-  body('password').notEmpty().withMessage('Password is required'),
-
-  // Controller logic
-  asyncHandler(async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      if (!user.isVerified) {
-        return res.status(401).json({ message: 'Please verify your email before logging in' });
-      }
-      
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-      });
-      res.json({
-        token,
-        // user: {  
-        //   id: user._id,
-        //   name: user.name,
-        //   email: user.email
-        // } //not sure if this should be included
-      });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
-    }
-  })
-];
-
 // Email verification
 exports.verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
@@ -186,6 +147,83 @@ exports.resendVerification = asyncHandler(async (req, res) => {
     res.status(500).json({ message: 'Failed to resend verification email' });
   }
 });
+
+
+// User login
+exports.loginUser = [
+  // Validation and sanitization
+  body('email').isEmail().withMessage('Please enter a valid email'), //.normalizeEmail(), allow periods in emails
+  body('password').notEmpty().withMessage('Password is required'),
+
+  // Controller logic
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (user && (await bcrypt.compare(password, user.password))) {
+      if (!user.isVerified) {
+        return res.status(401).json({ message: 'Please verify your email before logging in' });
+      }
+      
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: '1h',
+      });
+      res.json({
+        token,
+        // user: {  
+        //   id: user._id,
+        //   name: user.name,
+        //   email: user.email
+        // } //not sure if this should be included
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid email or password' });
+    }
+  })
+];
+
+// Request password reset
+exports.requestPasswordReset = [
+  body('email').isEmail().withMessage('Please enter a valid email'),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    try {
+      await resend.emails.send({
+        from: 'support@tremendo.pro',
+        to: email,
+        subject: 'Password Reset Request',
+        html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${resetToken}">here</a> to reset your password. This link will expire in 1 hour.`
+      });
+
+      res.status(200).json({ message: 'Password reset email sent' });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to send password reset email' });
+    }
+  })
+];
+
+
 
 // User logout
 exports.logoutUser = asyncHandler(async (req, res) => {

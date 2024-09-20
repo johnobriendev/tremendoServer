@@ -188,41 +188,6 @@ exports.loginUser = [
   })
 ];
 
-// Request password reset
-// exports.requestPasswordReset = [
-//   body('email').isEmail().withMessage('Please enter a valid email'),
-//   asyncHandler(async (req, res) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() });
-//     }
-
-//     const { email } = req.body;
-//     const user = await User.findOne({ email });
-
-//     if (!user) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-//     user.resetPasswordToken = resetToken;
-//     user.resetPasswordExpires = Date.now() + 3600000 * 24; // 1 hour
-//     await user.save();
-
-//     try {
-//       await resend.emails.send({
-//         from: 'support@tremendo.pro',
-//         to: email,
-//         subject: 'Password Reset Request',
-//         html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${resetToken}">here</a> to reset your password. This link will expire in 1 hour.`
-//       });
-
-//       res.status(200).json({ message: 'Password reset email sent' });
-//     } catch (error) {
-//       res.status(500).json({ message: 'Failed to send password reset email' });
-//     }
-//   })
-// ];
 
 exports.requestPasswordReset = [
   body('email').isEmail().withMessage('Please enter a valid email'),
@@ -248,6 +213,8 @@ exports.requestPasswordReset = [
     user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
+
+    console.log('User after save:', user);
 
     // Create a JWT that includes the user's ID and the hashed reset token
     const jwtToken = jwt.sign(

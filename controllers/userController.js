@@ -41,7 +41,21 @@ exports.registerUser =[
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password, recaptchaToken } = req.body;
+
+    // Verify reCAPTCHA
+    try {
+      const recaptchaResponse = await axios.post(
+        `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
+      );
+      
+      if (!recaptchaResponse.data.success) {
+        return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: 'reCAPTCHA verification error' });
+    }
+
 
     // Check if user already exists
     const userExists = await User.findOne({ email });//changed from username to email

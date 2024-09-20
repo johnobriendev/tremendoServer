@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const axios = require('axios');
 const { Resend } = require('resend');
+const crypto = require('crypto');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -175,11 +176,11 @@ exports.loginUser = [
       });
       res.json({
         token,
-        // user: {  
-        //   id: user._id,
-        //   name: user.name,
-        //   email: user.email
-        // } //not sure if this should be included
+        user: {  
+          id: user._id,
+          name: user.name,
+          email: user.email
+        } //not sure if this should be included
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -188,6 +189,41 @@ exports.loginUser = [
 ];
 
 // Request password reset
+// exports.requestPasswordReset = [
+//   body('email').isEmail().withMessage('Please enter a valid email'),
+//   asyncHandler(async (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
+
+//     const { email } = req.body;
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+//     user.resetPasswordToken = resetToken;
+//     user.resetPasswordExpires = Date.now() + 3600000 * 24; // 1 hour
+//     await user.save();
+
+//     try {
+//       await resend.emails.send({
+//         from: 'support@tremendo.pro',
+//         to: email,
+//         subject: 'Password Reset Request',
+//         html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${resetToken}">here</a> to reset your password. This link will expire in 1 hour.`
+//       });
+
+//       res.status(200).json({ message: 'Password reset email sent' });
+//     } catch (error) {
+//       res.status(500).json({ message: 'Failed to send password reset email' });
+//     }
+//   })
+// ];
+
 exports.requestPasswordReset = [
   body('email').isEmail().withMessage('Please enter a valid email'),
   asyncHandler(async (req, res) => {
@@ -203,21 +239,42 @@ exports.requestPasswordReset = [
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    user.resetPasswordToken = resetToken;
+    // Generate a unique reset token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    
+    // Hash the reset token before saving it to the database
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
+
+    // Create a JWT that includes the user's ID and the hashed reset token
+    const jwtToken = jwt.sign(
+      { 
+        id: user._id,
+        resetToken: hashedToken
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log('Generated reset token:', resetToken);
+    console.log('Hashed reset token:', hashedToken);
+    console.log('JWT token:', jwtToken);
+    console.log('Reset token expiry:', new Date(user.resetPasswordExpires));
 
     try {
       await resend.emails.send({
         from: 'support@tremendo.pro',
         to: email,
         subject: 'Password Reset Request',
-        html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${resetToken}">here</a> to reset your password. This link will expire in 1 hour.`
+        html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}">here</a> to reset your password. This link will expire in 1 hour.`
       });
 
       res.status(200).json({ message: 'Password reset email sent' });
     } catch (error) {
+      console.error('Error sending reset email:', error);
       res.status(500).json({ message: 'Failed to send password reset email' });
     }
   })
@@ -242,14 +299,22 @@ exports.resetPassword = [
     const { password } = req.body;
 
     try {
+      console.log('Received token:', token);
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Decoded token:', decoded);
       const user = await User.findOne({
         _id: decoded.id,
-        resetPasswordToken: token,
+        resetPasswordToken: decoded.resetToken,
         resetPasswordExpires: { $gt: Date.now() }
       });
 
+      console.log('User found:', user ? user._id : 'No user found');
+
       if (!user) {
+        console.log('Reset password token check failed');
+        console.log('Current time:', new Date());
+        console.log('Token expiry:', new Date(decoded.exp * 1000));
         return res.status(400).json({ message: 'Invalid or expired reset token' });
       }
 
@@ -260,6 +325,13 @@ exports.resetPassword = [
 
       res.status(200).json({ message: 'Password reset successful' });
     } catch (error) {
+      console.error('Password reset error:', error);
+      if (error instanceof jwt.JsonWebTokenError) {
+        return res.status(400).json({ message: 'Invalid token', error: error.message });
+      }
+      if (error instanceof jwt.TokenExpiredError) {
+        return res.status(400).json({ message: 'Token expired', error: error.message });
+      }
       res.status(400).json({ message: 'Password reset failed', error: error.message });
     }
   })

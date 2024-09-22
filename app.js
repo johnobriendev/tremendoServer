@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const passport = require('passport');
+const compression = require('compression');
+const helmet = require("helmet");
 require('dotenv').config();
 
 
@@ -24,8 +26,18 @@ mongoose.connect(process.env.MONGODB_URI, {
 }).catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
+
+const RateLimit = require("express-rate-limit");
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100,
+});
+// Apply rate limiter to all requests
+app.use(limiter);
 app.use(cors());
 app.use(express.json());
+app.use(compression());
+app.use(helmet());
 
 app.use(passport.initialize()); 
 require('./config/passport');

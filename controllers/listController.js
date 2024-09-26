@@ -13,6 +13,7 @@ exports.getLists = asyncHandler(async (req, res) => {
 exports.createList = [
   body('name').notEmpty().withMessage('Name is required').isString().trim(),
   body('position').isInt().withMessage('Position must be an integer'),
+  body('color').optional().isString().trim(),
 
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -20,11 +21,12 @@ exports.createList = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, position } = req.body;
+    const { name, position, color } = req.body;
     const list = await List.create({
       name,
       boardId: req.params.boardId,
       position,
+      color: color || null,
     });
     res.status(201).json(list);
   }),
@@ -35,6 +37,7 @@ exports.createList = [
 exports.updateList = [
   body('name').optional().isString().trim(),
   body('position').optional().isInt().withMessage('Position must be an integer'),
+  body('color').optional().isString().trim(),
 
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -43,8 +46,8 @@ exports.updateList = [
     }
 
     const { id } = req.params;
-    const { name, position } = req.body;
-    const list = await List.findByIdAndUpdate(id, { name, position }, { new: true });
+    const { name, position, color } = req.body;
+    const list = await List.findByIdAndUpdate(id, { name, position, color: color || null }, { new: true });
     if (!list) {
       res.status(404).json({ message: 'List not found' });
     } else {

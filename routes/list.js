@@ -4,15 +4,15 @@ const listController = require('../controllers/listController');
 const { authenticateJWT } = require('../middleware/auth');
 
 // Get all lists within a specific board
-router.get('/:boardId/lists', authenticateJWT, listController.getLists);
+router.get('/:boardId', authenticateJWT, listController.getLists);
 
 // Create a new list within a board
-router.post('/:boardId/lists', authenticateJWT, listController.createList);
+router.post('/:boardId', authenticateJWT, listController.createList);
 
 // Update a specific list
-router.put('/lists/:id', authenticateJWT, listController.updateList);
+router.put('/:id', authenticateJWT, listController.updateList);
 
 // Delete a specific list
-router.delete('/lists/:id', authenticateJWT, listController.deleteList);
+router.delete('/:id', authenticateJWT, listController.deleteList);
 
 module.exports = router;

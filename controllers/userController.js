@@ -65,6 +65,7 @@ exports.registerUser =[
     }
 
     const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
     // Create new user
     const user = await User.create({
@@ -77,13 +78,38 @@ exports.registerUser =[
 
     try {
       // Send verification email
+      // await resend.emails.send({
+      //   // from: 'onboarding@resend.dev',
+      //   from: 'support@tremendo.pro',
+      //   to: email,
+      //   subject: 'Verify Your Email',
+      //   html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
+      // });
+
       await resend.emails.send({
-        // from: 'onboarding@resend.dev',
         from: 'support@tremendo.pro',
         to: email,
-        subject: 'Verify Your Email',
-        html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
+        subject: 'Verify Your Email - Tremendo',
+        html: `
+          <h2>Welcome to Tremendo!</h2>
+          <p>Thank you for registering. To complete your account setup, please verify your email address.</p>
+          
+          <p><strong>Click the button below to verify your email:</strong></p>
+          <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Verify Email</a>
+          
+          <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
+          <p style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">
+            ${verificationLink}
+          </p>
+          
+          <p><em>This verification link will expire in 24 hours.</em></p>
+          
+          <p>If you didn't create an account with Tremendo, please ignore this email.</p>
+          
+          <p>Need help? Contact our support team at support@tremendo.pro</p>
+        `
       });
+
 
       res.status(201).json({
         _id: user._id,
@@ -127,6 +153,7 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   }
 });
 
+
 exports.resendVerification = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -142,6 +169,8 @@ exports.resendVerification = asyncHandler(async (req, res) => {
 
   // Generate a new verification token
   const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+  const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
   
   user.verificationToken = verificationToken;
   user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
@@ -149,12 +178,36 @@ exports.resendVerification = asyncHandler(async (req, res) => {
 
   try {
     // Send verification email
+    // await resend.emails.send({
+    //   // from: 'onboarding@resend.dev',
+    //   from: 'support@tremendo.pro',
+    //   to: email,
+    //   subject: 'Verify Your Email',
+    //   html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
+    // });
+
     await resend.emails.send({
-      // from: 'onboarding@resend.dev',
       from: 'support@tremendo.pro',
       to: email,
-      subject: 'Verify Your Email',
-      html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
+      subject: 'Verify Your Email - Tremendo',
+      html: `
+        <h2>Email Verification Reminder</h2>
+        <p>You recently requested a new verification link for your Tremendo account.</p>
+        
+        <p><strong>Click the button below to verify your email:</strong></p>
+        <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Verify Email</a>
+        
+        <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
+        <p style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">
+          ${verificationLink}
+        </p>
+        
+        <p><em>This verification link will expire in 24 hours.</em></p>
+        
+        <p>If you didn't request this verification email, please ignore it or contact our support team.</p>
+        
+        <p>Need help? Contact our support team at support@tremendo.pro</p>
+      `
     });
 
     res.status(200).json({ message: 'Verification email resent successfully' });
@@ -228,7 +281,7 @@ exports.requestPasswordReset = [
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    console.log('User after save:', user);
+    // console.log('User after save:', user);
 
     // Create a JWT that includes the user's ID and the hashed reset token
     const jwtToken = jwt.sign(
@@ -240,18 +293,44 @@ exports.requestPasswordReset = [
       { expiresIn: '1h' }
     );
 
-    console.log('Generated reset token:', resetToken);
-    console.log('Hashed reset token:', hashedToken);
-    console.log('JWT token:', jwtToken);
-    console.log('Reset token expiry:', new Date(user.resetPasswordExpires));
+    // console.log('Generated reset token:', resetToken);
+    // console.log('Hashed reset token:', hashedToken);
+    // console.log('JWT token:', jwtToken);
+    // console.log('Reset token expiry:', new Date(user.resetPasswordExpires));
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}`;
 
     try {
+      // await resend.emails.send({
+      //   from: 'support@tremendo.pro',
+      //   to: email,
+      //   subject: 'Password Reset Request',
+      //   html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}">here</a> to reset your password. This link will expire in 1 hour.`
+      // });
       await resend.emails.send({
         from: 'support@tremendo.pro',
         to: email,
-        subject: 'Password Reset Request',
-        html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}">here</a> to reset your password. This link will expire in 1 hour.`
+        subject: 'Password Reset - Tremendo',
+        html: `
+          <h2>Password Reset Request</h2>
+          <p>You recently requested to reset your password for your Tremendo account.</p>
+          
+          <p><strong>Click the button below to reset your password:</strong></p>
+          <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
+          
+          <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
+          <p style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">
+            ${resetLink}
+          </p>
+          
+          <p><em>This password reset link will expire in 1 hour.</em></p>
+          
+          <p>If you did not request a password reset, please ignore this email or contact our support team if you have concerns.</p>
+          
+          <p>Need help? Contact our support team at support@tremendo.pro</p>
+        `
       });
+  
 
       res.status(200).json({ message: 'Password reset email sent' });
     } catch (error) {

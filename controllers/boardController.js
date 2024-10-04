@@ -16,6 +16,7 @@ exports.createBoard = [
   body('description').optional().isString().trim().escape(),
   body('isPrivate').isBoolean().withMessage('isPrivate must be a boolean'),
   body('backgroundColor').optional().isString().trim().escape(),
+  body('template').isIn(['kanban', 'weekly', 'blank']).withMessage('Invalid template'),
 
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -23,7 +24,7 @@ exports.createBoard = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, description, isPrivate, backgroundColor } = req.body;
+    const { name, description, isPrivate, backgroundColor,template } = req.body;
     const board = new Board({
       name,
       description,
@@ -34,14 +35,44 @@ exports.createBoard = [
 
     await board.save();
 
-    // Create three default lists
-    const defaultLists = [
-      { name: 'To Do', boardId: board._id, position: 1 },
-      { name: 'In Progress', boardId: board._id, position: 2 },
-      { name: 'Done', boardId: board._id, position: 3 }
-    ];
+    // // Create three default lists
+    // const defaultLists = [
+    //   { name: 'To Do', boardId: board._id, position: 1 },
+    //   { name: 'In Progress', boardId: board._id, position: 2 },
+    //   { name: 'Done', boardId: board._id, position: 3 }
+    // ];
 
-    await List.insertMany(defaultLists);
+    // await List.insertMany(defaultLists);
+    
+    let listsToCreate = [];
+
+    switch (template) {
+      case 'kanban':
+        listsToCreate = [
+          { name: 'To Do', boardId: board._id, position: 1 },
+          { name: 'In Progress', boardId: board._id, position: 2 },
+          { name: 'Done', boardId: board._id, position: 3 }
+        ];
+        break;
+      case 'weekly':
+        listsToCreate = [
+          { name: 'Monday', boardId: board._id, position: 1 },
+          { name: 'Tuesday', boardId: board._id, position: 2 },
+          { name: 'Wednesday', boardId: board._id, position: 3 },
+          { name: 'Thursday', boardId: board._id, position: 4 },
+          { name: 'Friday', boardId: board._id, position: 5 },
+          { name: 'Saturday', boardId: board._id, position: 6 },
+          { name: 'Sunday', boardId: board._id, position: 7 }
+        ];
+        break;
+      case 'blank':
+        // No lists to create
+        break;
+    }
+
+    if (listsToCreate.length > 0) {
+      await List.insertMany(listsToCreate);
+    }
 
     res.status(201).json(board);
   }),

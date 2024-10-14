@@ -15,4 +15,7 @@ router.put('/:id', authenticateJWT, listController.updateList);
 // Delete a specific list
 router.delete('/:id', authenticateJWT, listController.deleteList);
 
+// Bulk update list positions
+router.put('/bulk-update', authenticateJWT, listController.bulkUpdateListPositions);
+
 module.exports = router;

@@ -56,6 +56,26 @@ exports.updateList = [
   }),
 ];
 
+// Bulk update list positions
+exports.bulkUpdateListPositions = asyncHandler(async (req, res) => {
+  const { lists } = req.body;
+
+  if (!Array.isArray(lists)) {
+    return res.status(400).json({ message: 'Invalid input: lists should be an array' });
+  }
+
+  const updateOperations = lists.map(({ _id, position }) => ({
+    updateOne: {
+      filter: { _id },
+      update: { $set: { position } }
+    }
+  }));
+
+  await List.bulkWrite(updateOperations);
+
+  res.json({ message: 'List positions updated successfully' });
+});
+
 // Delete a specific list and all associated cards
 exports.deleteList = asyncHandler(async (req, res) => {
   const { id } = req.params;

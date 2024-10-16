@@ -10,6 +10,19 @@ const crypto = require('crypto');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Generate tokens helper
+const generateTokens = (userId) => {
+  const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: '1h',
+  });
+  
+  const refreshToken = jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: '7d',
+  });
+  
+  return { accessToken, refreshToken };
+};
+
 // get user data
 exports.getUserData = asyncHandler(async (req, res) => {
   try {
@@ -219,12 +232,47 @@ exports.resendVerification = asyncHandler(async (req, res) => {
 
 
 // User login
+// exports.loginUser = [
+//   // Validation and sanitization
+//   body('email').isEmail().withMessage('Please enter a valid email'), //.normalizeEmail(), allow periods in emails
+//   body('password').notEmpty().withMessage('Password is required'),
+
+//   // Controller logic
+//   asyncHandler(async (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
+
+//     const { email, password } = req.body;
+
+//     const user = await User.findOne({ email });
+//     if (user && (await bcrypt.compare(password, user.password))) {
+//       if (!user.isVerified) {
+//         return res.status(401).json({ message: 'Please verify your email before logging in' });
+//       }
+      
+//       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+//         expiresIn: '1h',
+//       });
+//       res.json({
+//         token,
+//         user: {  
+//           id: user._id,
+//           name: user.name,
+//           email: user.email
+//         } //not sure if this should be included
+//       });
+//     } else {
+//       res.status(401).json({ message: 'Invalid email or password' });
+//     }
+//   })
+// ];
+
 exports.loginUser = [
-  // Validation and sanitization
-  body('email').isEmail().withMessage('Please enter a valid email'), //.normalizeEmail(), allow periods in emails
+  body('email').isEmail().withMessage('Please enter a valid email'),
   body('password').notEmpty().withMessage('Password is required'),
 
-  // Controller logic
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -239,22 +287,79 @@ exports.loginUser = [
         return res.status(401).json({ message: 'Please verify your email before logging in' });
       }
       
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
+      // Generate both tokens
+      const { accessToken, refreshToken } = generateTokens(user._id);
+      
+      // Save refresh token to database
+      await RefreshToken.create({
+        token: refreshToken,
+        userId: user._id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
+
+      // Set refresh token as HTTP-only cookie
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+      
       res.json({
-        token,
-        user: {  
+        token: accessToken,
+        user: {
           id: user._id,
           name: user.name,
           email: user.email
-        } //not sure if this should be included
+        }
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
   })
 ];
+
+// Refresh token controller
+exports.refreshToken = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token required' });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+    const savedToken = await RefreshToken.findOne({ 
+      token: refreshToken,
+      userId: decoded.id 
+    });
+    
+    if (!savedToken) {
+      return res.status(401).json({ message: 'Invalid refresh token' });
+    }
+
+    const accessToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    res.json({ token: accessToken });
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid refresh token' });
+  }
+});
+
+// Logout controller
+exports.logoutUser = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  
+  if (refreshToken) {
+    await RefreshToken.deleteOne({ token: refreshToken });
+  }
+  
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logged out successfully' });
+});
 
 
 exports.requestPasswordReset = [
@@ -402,9 +507,9 @@ exports.resetPassword = [
 
 
 // User logout
-exports.logoutUser = asyncHandler(async (req, res) => {
-  res.status(200).json({ message: 'Logout successful' });
-});
+// exports.logoutUser = asyncHandler(async (req, res) => {
+//   res.status(200).json({ message: 'Logout successful' });
+// });
 
 
 // User registration

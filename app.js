@@ -30,6 +30,12 @@ app.set('trust proxy', 1);
 
 // Middleware
 
+// Set CORS options
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Fallback to localhost 
+  credentials: true, // Allow credentials (cookies, etc.)
+};
+
 const RateLimit = require("express-rate-limit");
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
@@ -37,7 +43,8 @@ const limiter = RateLimit({
 });
 // Apply rate limiter to all requests
 app.use(limiter);
-app.use(cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(compression());
 app.use(helmet());

@@ -10,18 +10,7 @@ const crypto = require('crypto');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Generate tokens helper
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: '1h',
-  });
-  
-  const refreshToken = jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: '7d',
-  });
-  
-  return { accessToken, refreshToken };
-};
+
 
 // get user data
 exports.getUserData = asyncHandler(async (req, res) => {
@@ -91,15 +80,7 @@ exports.registerUser =[
     });
 
     try {
-      // Send verification email
-      // await resend.emails.send({
-      //   // from: 'onboarding@resend.dev',
-      //   from: 'support@tremendo.pro',
-      //   to: email,
-      //   subject: 'Verify Your Email',
-      //   html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
-      // });
-
+ 
       await resend.emails.send({
         from: 'support@tremendo.pro',
         to: email,
@@ -123,7 +104,6 @@ exports.registerUser =[
           <p>Need help? Contact our support team at support@tremendo.pro</p>
         `
       });
-
 
       res.status(201).json({
         _id: user._id,
@@ -269,6 +249,19 @@ exports.resendVerification = asyncHandler(async (req, res) => {
 //   })
 // ];
 
+// Generate tokens helper
+const generateTokens = (userId) => {
+  const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: '1h',
+  });
+  
+  const refreshToken = jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: '7d',
+  });
+  
+  return { accessToken, refreshToken };
+};
+
 exports.loginUser = [
   body('email').isEmail().withMessage('Please enter a valid email'),
   body('password').notEmpty().withMessage('Password is required'),
@@ -319,6 +312,7 @@ exports.loginUser = [
   })
 ];
 
+
 // Refresh token controller
 exports.refreshToken = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
@@ -349,6 +343,7 @@ exports.refreshToken = asyncHandler(async (req, res) => {
   }
 });
 
+
 // Logout controller
 exports.logoutUser = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
@@ -356,8 +351,13 @@ exports.logoutUser = asyncHandler(async (req, res) => {
   if (refreshToken) {
     await RefreshToken.deleteOne({ token: refreshToken });
   }
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
   
-  res.clearCookie('refreshToken');
+  //res.clearCookie('refreshToken');
   res.json({ message: 'Logged out successfully' });
 });
 
@@ -399,20 +399,10 @@ exports.requestPasswordReset = [
       { expiresIn: '1h' }
     );
 
-    // console.log('Generated reset token:', resetToken);
-    // console.log('Hashed reset token:', hashedToken);
-    // console.log('JWT token:', jwtToken);
-    // console.log('Reset token expiry:', new Date(user.resetPasswordExpires));
-
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}`;
 
     try {
-      // await resend.emails.send({
-      //   from: 'support@tremendo.pro',
-      //   to: email,
-      //   subject: 'Password Reset Request',
-      //   html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}">here</a> to reset your password. This link will expire in 1 hour.`
-      // });
+     
       await resend.emails.send({
         from: 'support@tremendo.pro',
         to: email,

@@ -56,25 +56,36 @@ exports.updateList = [
   }),
 ];
 
-// Bulk update list positions
-exports.bulkUpdateListPositions = asyncHandler(async (req, res) => {
-  const { lists } = req.body;
 
-  if (!Array.isArray(lists)) {
-    return res.status(400).json({ message: 'Invalid input: lists should be an array' });
-  }
+exports.updateListPositions = [
+  body('lists').isArray().withMessage('Lists must be an array'),
+  body('lists.*.id').isMongoId().withMessage('List ID must be a valid Mongo ID'),
+  body('lists.*.position').isInt().withMessage('Position must be an integer'),
 
-  const updateOperations = lists.map(({ _id, position }) => ({
-    updateOne: {
-      filter: { _id },
-      update: { $set: { position } }
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
-  }));
 
-  await List.bulkWrite(updateOperations);
+    const { lists } = req.body;
 
-  res.json({ message: 'List positions updated successfully' });
-});
+    try {
+      await Promise.all(lists.map(async (listData) => {
+        await List.findByIdAndUpdate(
+          listData.id,
+          { position: listData.position },
+          { new: true, runValidators: true }
+        );
+      }));
+
+      res.json({ message: 'List positions updated successfully' });
+    } catch (error) {
+      console.error('Error in updateListPositions:', error);
+      res.status(500).json({ message: 'An error occurred while updating list positions', error: error.message });
+    }
+  })
+];
 
 // Delete a specific list and all associated cards
 exports.deleteList = asyncHandler(async (req, res) => {

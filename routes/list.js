@@ -9,6 +9,9 @@ router.get('/:boardId', authenticateJWT, listController.getLists);
 // Create a new list within a board
 router.post('/:boardId', authenticateJWT, listController.createList);
 
+//update list positions
+router.put('/update-positions', authenticateJWT, listController.updateListPositions);
+
 // Update a specific list
 router.put('/:id', authenticateJWT, listController.updateList);
 
@@ -16,6 +19,8 @@ router.put('/:id', authenticateJWT, listController.updateList);
 router.delete('/:id', authenticateJWT, listController.deleteList);
 
 // Bulk update list positions
-router.put('/bulk-update', authenticateJWT, listController.bulkUpdateListPositions);
+// router.put('/bulk-update', authenticateJWT, listController.bulkUpdateListPositions);
+
+
 
 module.exports = router;

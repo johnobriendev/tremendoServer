@@ -1,5 +1,6 @@
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const RefreshToken = require('../models/RefreshToken');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');

@@ -171,14 +171,6 @@ exports.resendVerification = asyncHandler(async (req, res) => {
   await user.save();
 
   try {
-    // Send verification email
-    // await resend.emails.send({
-    //   // from: 'onboarding@resend.dev',
-    //   from: 'support@tremendo.pro',
-    //   to: email,
-    //   subject: 'Verify Your Email',
-    //   html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
-    // });
 
     await resend.emails.send({
       from: 'support@tremendo.pro',
@@ -350,12 +342,14 @@ exports.logoutUser = asyncHandler(async (req, res) => {
   
   if (refreshToken) {
     await RefreshToken.deleteOne({ token: refreshToken });
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
   }
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  });
+ 
   
   //res.clearCookie('refreshToken');
   res.json({ message: 'Logged out successfully' });

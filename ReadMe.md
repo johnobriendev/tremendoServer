@@ -14,7 +14,7 @@ Create a `.env` file in the root directory with the following variables:
 
 ```plaintext
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/tremendo
+MONGODB_URI=
 JWT_SECRET=your_jwt_secret
 NODE_ENV=development
 ```
@@ -24,8 +24,8 @@ NODE_ENV=development
 1. **Clone the repository**:
 
     ```bash
-    git clone https://github.com/your-username/tremendo-backend.git
-    cd tremendo-backend
+    git clone 
+    cd tremendoServer
     ```
 
 2. **Install dependencies**:
@@ -50,39 +50,55 @@ NODE_ENV=development
 
 ## API Endpoints
 
-### Authentication
+### User Routes (`user.js`)
+These routes handle user management, including authentication, password reset, and email verification.
 
-- **`POST /auth/register`** - Register a new user.
-- **`POST /auth/login`** - Log in a user.
+- **`POST /register`** - Register a new user (rate-limited).
+- **`POST /login`** - Log in a user.
+- **`POST /request-password-reset`** - Request a password reset link.
+- **`POST /reset-password`** - Reset a user's password.
+- **`POST /logout`** - Log out a user.
+- **`GET /verify-email`** - Verify a user's email.
+- **`POST /resend-verification`** - Resend the email verification link.
+- **`GET /`** - Get authenticated user data.
 
-### User Management
+### Board Routes (`board.js`)
+These routes allow users to manage Kanban boards.
 
-- **`GET /users/:id`** - Get user details by ID.
-- **`PUT /users/:id`** - Update user information.
-- **`DELETE /users/:id`** - Delete a user account.
+- **`GET /`** - Retrieve all boards for the authenticated user.
+- **`POST /`** - Create a new board.
+- **`GET /:id`** - Retrieve details of a specific board by ID.
+- **`PUT /:id`** - Update a specific board.
+- **`DELETE /:id`** - Delete a board.
 
-### Boards
+### List Routes (`list.js`)
+These routes manage lists within a specific board.
 
-- **`GET /boards`** - Retrieve all boards for the authenticated user.
-- **`POST /boards`** - Create a new board.
-- **`GET /boards/:id`** - Retrieve details for a specific board.
-- **`PUT /boards/:id`** - Update a specific board.
-- **`DELETE /boards/:id`** - Delete a board.
+- **`GET /:boardId`** - Get all lists within a specified board.
+- **`POST /:boardId`** - Create a new list within a specified board.
+- **`PUT /:id`** - Update a specific list.
+- **`DELETE /:id`** - Delete a specific list.
 
-### Tasks
+### Card Routes (`card.js`)
+These routes manage cards within lists on a board.
 
-- **`GET /tasks/:boardId`** - Retrieve all tasks for a specific board.
-- **`POST /tasks`** - Create a new task.
-- **`GET /tasks/:id`** - Retrieve details for a specific task.
-- **`PUT /tasks/:id`** - Update a task.
-- **`DELETE /tasks/:id`** - Delete a task.
+- **`GET /:boardId/cards`** - Retrieve all cards within a specified board.
+- **`POST /:boardId/cards`** - Create a new card within a board.
+- **`GET /cards/:id`** - Retrieve details of a specific card by ID.
+- **`PUT /cards/:id`** - Update a specific card.
+- **`DELETE /cards/:id`** - Delete a specific card.
+- **`POST /cards/:id/comments`** - Add a comment to a specific card.
+- **`DELETE /cards/:cardId/comments/:commentId`** - Delete a comment from a specific card.
 
 ## Technologies Used
 - **Express.js** - Node.js framework for building RESTful APIs.
 - **MongoDB** - NoSQL database for data storage.
 - **Mongoose** - ODM for MongoDB.
-- **JWT (JSON Web Tokens)** - For secure user authentication.
+- **Passport JWT (JSON Web Tokens)** - For secure user authentication.
 - **bcrypt** - For password hashing.
+- **Resend** - For email verification and password reset.
+- **Google Recaptcha** - For increased registration security.
+
 
 ## Running Tests
 Run the following command to execute tests:

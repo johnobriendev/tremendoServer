@@ -8,13 +8,23 @@
 
   "devDependencies": {
 
-    "nodemon": "^3.1.4"
+    "axios": "^1.7.7",
+
+    "jest": "^29.7.0",
+
+    "mongodb-memory-server": "^10.1.2",
+
+    "nodemon": "^3.1.4",
+
+    "resend": "^4.0.1-alpha.0",
+
+    "supertest": "^7.0.0"
 
   },
 
   "scripts": {
 
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_ENV=test jest",
 
     "start": "node app.js",
 
@@ -23,8 +33,6 @@
   },
 
   "dependencies": {
-
-    "axios": "^1.7.7",
 
     "bcryptjs": "^2.4.3",
 
@@ -52,9 +60,7 @@
 
     "passport": "^0.7.0",
 
-    "passport-jwt": "^4.0.1",
-
-    "resend": "^4.0.0"
+    "passport-jwt": "^4.0.1"
 
   },
 

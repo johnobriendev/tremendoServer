@@ -368,9 +368,6 @@ exports.resetPassword = [
   })
 ];
 
-
-
-
 // User logout
 exports.logoutUser = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Logout successful' });

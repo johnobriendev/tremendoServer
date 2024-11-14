@@ -24,7 +24,7 @@
 
   "scripts": {
 
-    "test": "NODE_ENV=test jest",
+    "test": "jest", 
 
     "start": "node app.js",
 

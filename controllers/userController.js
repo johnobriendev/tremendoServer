@@ -77,15 +77,6 @@ exports.registerUser =[
     });
 
     try {
-      // Send verification email
-      // await resend.emails.send({
-      //   // from: 'onboarding@resend.dev',
-      //   from: 'support@tremendo.pro',
-      //   to: email,
-      //   subject: 'Verify Your Email',
-      //   html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
-      // });
-
       await resend.emails.send({
         from: 'support@tremendo.pro',
         to: email,
@@ -177,15 +168,6 @@ exports.resendVerification = asyncHandler(async (req, res) => {
   await user.save();
 
   try {
-    // Send verification email
-    // await resend.emails.send({
-    //   // from: 'onboarding@resend.dev',
-    //   from: 'support@tremendo.pro',
-    //   to: email,
-    //   subject: 'Verify Your Email',
-    //   html: `Please click <a href="${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}">here</a> to verify your email. This link will expire in 24 hours.`
-    // });
-
     await resend.emails.send({
       from: 'support@tremendo.pro',
       to: email,
@@ -301,12 +283,6 @@ exports.requestPasswordReset = [
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}`;
 
     try {
-      // await resend.emails.send({
-      //   from: 'support@tremendo.pro',
-      //   to: email,
-      //   subject: 'Password Reset Request',
-      //   html: `Please click <a href="${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}">here</a> to reset your password. This link will expire in 1 hour.`
-      // });
       await resend.emails.send({
         from: 'support@tremendo.pro',
         to: email,
@@ -330,8 +306,6 @@ exports.requestPasswordReset = [
           <p>Need help? Contact our support team at support@tremendo.pro</p>
         `
       });
-  
-
       res.status(200).json({ message: 'Password reset email sent' });
     } catch (error) {
       console.error('Error sending reset email:', error);
@@ -397,65 +371,9 @@ exports.resetPassword = [
   })
 ];
 
-
-
-
 // User logout
 exports.logoutUser = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Logout successful' });
 });
 
 
-// User registration
-// exports.registerUser =[
-  
-//   // Validation and sanitization
-//   body('name').optional().isString().trim().escape(),
-//   body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
-//   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-//   body('g-recaptcha-response').not().isEmpty().withMessage('reCAPTCHA is required'),
-
-//   asyncHandler(async (req, res) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ errors: errors.array() });
-//     }
-  
-//     const { name, email, password, 'g-recaptcha-response': recaptchaToken } = req.body;
-
-//     // Verify reCAPTCHA with Google
-//     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-//     const recaptchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`;
-    
-//     try {
-//       const recaptchaResponse = await axios.post(recaptchaVerifyUrl);
-//       const { success } = recaptchaResponse.data;
-      
-//       if (!success) {
-//         return res.status(400).json({ message: 'Failed reCAPTCHA verification' });
-//       }
-
-//       // Check if user already exists
-//       const userExists = await User.findOne({ email });//changed from username to email
-//       if (userExists) {
-//         res.status(400).json({ message: 'User already exists' });
-//         return;
-//       }
-
-//       // Create new user
-//       const user = await User.create({
-//         name,
-//         email,
-//         password: await bcrypt.hash(password, 10),
-//       });
-
-//       res.status(201).json({
-//         _id: user._id,
-//         name: user.name,
-//         email: user.email,
-//       });
-//     } catch (error) {
-//     return res.status(500).json({ message: 'reCAPTCHA verification failed' });
-//     }
-//   })
-// ];

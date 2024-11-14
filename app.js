@@ -18,7 +18,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI_TEST, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 }).then(() => {
@@ -62,3 +62,5 @@ app.use((err, req, res, next) => {
  app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+module.exports = app;

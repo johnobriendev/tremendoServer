@@ -1,0 +1,4 @@
+im going to use the memory server like you originally suggested. when i installed axios and resend i got this message
+npm WARN idealTree Removing dependencies.axios in favor of devDependencies.axios
+npm WARN idealTree Removing dependencies.resend in favor of devDependencies.resend
+this means ill have to install them regularly after the tests correct

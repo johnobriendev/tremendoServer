@@ -24,6 +24,8 @@ jest.mock('resend', () => {
 
 
 describe('User Controller', () => {
+  let mockResendSend;
+  
   beforeAll(async () => {
     await mongoose.connect(process.env.MONGODB_URI_TEST || 'mongodb://localhost:27017/kanban-test');
   });
@@ -31,11 +33,13 @@ describe('User Controller', () => {
   afterAll(async () => {
     await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
+    await new Promise((resolve) => app.close(resolve));
   });
 
   beforeEach(async () => {
     await User.deleteMany({});
     jest.clearAllMocks();
+    mockResendSend = jest.spyOn(Resend().emails, 'send');
   });
 
   describe('POST /users/register', () => {
@@ -172,7 +176,7 @@ describe('User Controller', () => {
     });
   });
 
-  describe('GET /users/me', () => {
+  describe('GET /users', () => {
     let token;
     let userId;
 
@@ -184,12 +188,12 @@ describe('User Controller', () => {
         password: await bcrypt.hash('password123', 10)
       });
       userId = user._id;
-      token = jwt.sign({ id: userId }, process.env.JWT_SECRET);
+      token = jwt.sign({ id: userId.toString() }, process.env.JWT_SECRET);
     });
 
     it('should get user data with valid token', async () => {
       const res = await request(app)
-        .get('/users/me')
+        .get('/users')
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
@@ -199,7 +203,7 @@ describe('User Controller', () => {
 
     it('should not get user data with invalid token', async () => {
       const res = await request(app)
-        .get('/users/me')
+        .get('/users')
         .set('Authorization', 'Bearer invalid-token');
 
       expect(res.status).toBe(401);
@@ -262,6 +266,15 @@ describe('User Controller', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('message', 'Password reset email sent');
       expect(mockResendSend).toHaveBeenCalled();
+      expect(Resend().emails.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: 'no-reply@your-app.com',
+          to: 'test@example.com',
+          subject: 'Password Reset Request',
+          html: expect.any(String)
+        })
+      );
+    
     });
 
     it('should not send reset email for non-existent user', async () => {

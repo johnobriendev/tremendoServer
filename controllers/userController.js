@@ -12,7 +12,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // get user data
 exports.getUserData = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password'); // Ensure you're excluding sensitive data
+    const user = await User.findById(req.user._id).select('-password'); 
     if (user) {
       res.json({
         _id: user._id,

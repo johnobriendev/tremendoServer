@@ -317,7 +317,7 @@ describe('User Controller', () => {
       resetToken = jwt.sign(
         { 
           id: user._id.toString(),
-          resetToken: plaintextResetToken  // Use plaintext token in JWT
+          resetToken: hashedResetToken  // Use plaintext token in JWT
         },
         process.env.JWT_SECRET,
         { expiresIn: '1h' }

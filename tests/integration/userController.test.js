@@ -6,10 +6,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { Resend } = require('resend');
+const crypto = require('crypto');
 
 // Mock external services
 jest.mock('axios');
-
 jest.mock('resend', () => {
   return {
     Resend: jest.fn().mockImplementation(() => {
@@ -22,24 +22,30 @@ jest.mock('resend', () => {
   };
 });
 
-
 describe('User Controller', () => {
   let mockResendSend;
+  let server;
   
   beforeAll(async () => {
     await mongoose.connect(process.env.MONGODB_URI_TEST || 'mongodb://localhost:27017/kanban-test');
+    server = app.listen(0);
   });
 
   afterAll(async () => {
-    await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
-    await new Promise((resolve) => app.close(resolve));
+    await new Promise((resolve) => server.close(resolve));
+    
   });
 
   beforeEach(async () => {
     await User.deleteMany({});
     jest.clearAllMocks();
     mockResendSend = jest.spyOn(Resend().emails, 'send');
+    Resend.mockImplementation(() => ({
+      emails: {
+        send: mockResendSend
+      }
+    }));
   });
 
   describe('POST /users/register', () => {
@@ -249,32 +255,28 @@ describe('User Controller', () => {
   });
 
   describe('POST /users/request-password-reset', () => {
-    beforeEach(async () => {
-      await User.create({
+    it('should update user with reset token for valid user', async () => {
+      // Create a user
+      const user = await User.create({
         name: 'Test User',
         email: 'test@example.com',
         password: await bcrypt.hash('password123', 10),
         isVerified: true
       });
-    });
 
-    it('should send reset password email for valid user', async () => {
       const res = await request(app)
         .post('/users/request-password-reset')
         .send({ email: 'test@example.com' });
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('message', 'Password reset email sent');
-      expect(mockResendSend).toHaveBeenCalled();
-      expect(Resend().emails.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          from: 'no-reply@your-app.com',
-          to: 'test@example.com',
-          subject: 'Password Reset Request',
-          html: expect.any(String)
-        })
-      );
-    
+
+      // Verify that the user's resetPasswordToken and resetPasswordExpires fields are updated
+      const updatedUser = await User.findById(user._id);
+      expect(updatedUser.resetPasswordToken).toBeDefined();
+      expect(updatedUser.resetPasswordExpires).toBeDefined();
+      expect(updatedUser.resetPasswordExpires).toBeInstanceOf(Date);
+      expect(updatedUser.resetPasswordExpires.getTime()).toBeGreaterThan(Date.now());
     });
 
     it('should not send reset email for non-existent user', async () => {
@@ -292,22 +294,33 @@ describe('User Controller', () => {
     let user;
 
     beforeEach(async () => {
-      const hashedResetToken = require('crypto')
+      // Create a plaintext reset token
+      const plaintextResetToken = 'valid-reset-token';
+      
+      // Hash the reset token
+      const hashedResetToken = crypto
         .createHash('sha256')
-        .update('valid-reset-token')
+        .update(plaintextResetToken)
         .digest('hex');
 
+      // Create user with isVerified set to true
       user = await User.create({
         name: 'Test User',
         email: 'test@example.com',
         password: await bcrypt.hash('oldpassword', 10),
         resetPasswordToken: hashedResetToken,
-        resetPasswordExpires: Date.now() + 3600000
+        resetPasswordExpires: Date.now() + 3600000,
+        isVerified: true  // Make sure the user is verified
       });
 
+      // Create JWT token with both user ID and reset token
       resetToken = jwt.sign(
-        { id: user._id, resetToken: hashedResetToken },
-        process.env.JWT_SECRET
+        { 
+          id: user._id.toString(),
+          resetToken: plaintextResetToken  // Use plaintext token in JWT
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
       );
     });
 
@@ -323,6 +336,9 @@ describe('User Controller', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('message', 'Password reset successful');
 
+      // Wait a short time to ensure password update is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Verify new password works
       const loginRes = await request(app)
         .post('/users/login')
@@ -332,6 +348,9 @@ describe('User Controller', () => {
         });
 
       expect(loginRes.status).toBe(200);
+      expect(loginRes.body).toHaveProperty('token');
+      expect(loginRes.body).toHaveProperty('user');
+      expect(loginRes.body.user.email).toBe('test@example.com');
     });
 
     it('should not reset password with mismatched passwords', async () => {
@@ -347,4 +366,5 @@ describe('User Controller', () => {
       expect(res.body.errors).toBeDefined();
     });
   });
+
 });

@@ -18,11 +18,11 @@
 
   "scripts": {
 
-    "test": "jest --detectOpenHandles --forceExit",
+    "test": "NODE_ENV=test jest --detectOpenHandles --forceExit",
 
     "start": "node app.js",
 
-    "dev": "nodemon app.js"
+    "dev": "NODE_ENV=development nodemon app.js"
 
   },
 

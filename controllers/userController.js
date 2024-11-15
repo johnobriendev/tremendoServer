@@ -275,11 +275,6 @@ exports.requestPasswordReset = [
       { expiresIn: '1h' }
     );
 
-    // console.log('Generated reset token:', resetToken);
-    // console.log('Hashed reset token:', hashedToken);
-    // console.log('JWT token:', jwtToken);
-    // console.log('Reset token expiry:', new Date(user.resetPasswordExpires));
-
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${jwtToken}`;
 
     try {
@@ -333,8 +328,6 @@ exports.resetPassword = [
     const { password } = req.body;
 
     try {
-      console.log('Received token:', token);
-
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       console.log('Decoded token:', decoded);
       const user = await User.findOne({

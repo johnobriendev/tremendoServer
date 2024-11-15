@@ -17,8 +17,21 @@ const cardRoutes = require('./routes/card');
 const app = express();
 const port = process.env.PORT || 3000;
 
+let dbUri;
+switch (process.env.NODE_ENV) {
+  case 'test':
+    dbUri = process.env.MONGODB_URI_TEST;
+    break;
+  case 'development':
+    dbUri = process.env.MONGODB_URI_DEV;
+    break;
+  default:
+    dbUri = process.env.MONGODB_URI; // Default to production
+    break;
+}
+
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI_TEST, {
+mongoose.connect(dbUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 }).then(() => {

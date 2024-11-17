@@ -72,8 +72,8 @@ app.use((err, req, res, next) => {
   res.status(500).send(err);
 });
 
- app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+//  app.listen(port, () => {
+//   console.log(`Server is running on port ${port}`);
+// });
 
 module.exports = app;

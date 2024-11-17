@@ -20,9 +20,9 @@
 
     "test": "NODE_ENV=test jest --detectOpenHandles --forceExit",
 
-    "start": "node app.js",
+    "start": "node server.js",
 
-    "dev": "NODE_ENV=development nodemon app.js"
+    "dev": "NODE_ENV=development nodemon server.js"
 
   },
 

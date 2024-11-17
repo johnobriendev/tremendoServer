@@ -26,7 +26,7 @@ switch (process.env.NODE_ENV) {
     dbUri = process.env.MONGODB_URI_DEV;
     break;
   default:
-    dbUri = process.env.MONGODB_URI; // Default to production
+    dbUri = process.env.MONGODB_URI;
     break;
 }
 

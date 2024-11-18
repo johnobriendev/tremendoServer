@@ -92,8 +92,6 @@ async function reorderCards(listId) {
   }
 }
 
-
-
 // Delete a card
 exports.deleteCard = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -104,8 +102,6 @@ exports.deleteCard = asyncHandler(async (req, res) => {
     res.status(404).json({ message: 'Card not found' });
   }
 });
-
-
 
 // Add a comment to a card
 exports.addComment = asyncHandler(async (req, res) => {

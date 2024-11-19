@@ -12,6 +12,7 @@ const userRoutes = require('./routes/user');
 const boardRoutes = require('./routes/board');
 const listRoutes = require('./routes/list');
 const cardRoutes = require('./routes/card');
+const invitationRoutes = require('./routes/invitation')
 
 
 const app = express();
@@ -64,6 +65,7 @@ app.use('/users', userRoutes);
 app.use('/boards', boardRoutes);
 app.use('/lists', listRoutes);
 app.use('/cards', cardRoutes);
+app.use('/invitations', invitationRoutes);
 
 
 // Every thrown error in the application or the previous middleware function calling `next` with an error as an argument will eventually go to this middleware function

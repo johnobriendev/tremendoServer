@@ -56,9 +56,6 @@ exports.inviteUser = [
   })
 ];
 
-
-
-
 exports.getInvitations = asyncHandler(async (req, res) => {
   const invitations = await Invitation.find({ invitee: req.user._id, status: 'pending' })
     .populate('board', 'name')

@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.get('/', authenticateJWT, boardController.getBoards);
 
+router.get('/all', authenticateJWT, boardController.getAllBoards);
+
 router.post('/', authenticateJWT, boardController.createBoard);
 
 router.get('/:id', authenticateJWT, boardController.getBoardById);

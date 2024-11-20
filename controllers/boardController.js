@@ -152,31 +152,14 @@ exports.getAllBoards = asyncHandler(async (req, res) => {
 
 exports.getBoardDetails = async (req, res) => {
   try {
-    const { boardId } = req.params;
-    const userId = req.user._id;
-
-    const board = await Board.findById(boardId);
-    if (!board) {
-      return res.status(404).json({ message: 'Board not found' });
-    }
-
-    // Check if the user is the owner or a collaborator
-    if (board.owner.toString() !== userId.toString() && !board.collaborators.includes(userId)) {
-      return res.status(403).json({ message: 'Not authorized to access this board' });
-    }
-
-    const lists = await List.find({ boardId }).sort('position');
-    const cards = await Card.find({ boardId }).sort('position');
-
-    // Organize cards into their respective lists
-    const listsWithCards = lists.map(list => ({
-      ...list.toObject(),
-      cards: cards.filter(card => card.listId.toString() === list._id.toString())
-    }));
+    const board = req.board; // This comes from the boardAuth middleware
+    const lists = await List.find({ boardId: board._id });
+    const cards = await Card.find({ boardId: board._id });
 
     res.json({
       board,
-      lists: listsWithCards
+      lists,
+      cards
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching board details', error: error.message });

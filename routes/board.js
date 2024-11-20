@@ -17,6 +17,6 @@ router.put('/:id', authenticateJWT, boardController.updateBoard);
 
 router.delete('/:id', authenticateJWT, boardController.deleteBoard);
 
-router.get('/:id/details', authernticateJWT, boardCOntroller.getBoardDetails);
+router.get('/:id/details', authenticateJWT, boardController.getBoardDetails);
 
 module.exports = router;

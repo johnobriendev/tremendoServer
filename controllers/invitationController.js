@@ -22,16 +22,20 @@ exports.inviteUser = [
 
     const board = await Board.findById(boardId);
     if (!board) {
-      return res.status(404).json({ message: 'Board not found' });
+      return res.status(404).json({ code: 'BOARD_NOT_FOUND', message: 'Board not found' });
     }
 
     if (board.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to invite users to this board' });
+      return res.status(403).json({ code: 'NOT_AUTHORIZED', message: 'Not authorized to invite users to this board' });
     }
 
     const invitedUser = await User.findOne({ email });
     if (!invitedUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ code: 'USER_NOT_FOUND', message: 'User not found' });
+    }
+
+    if (invitedUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ code: 'SELF_INVITE', message: 'You cannot invite yourself to the board' });
     }
 
     const existingInvitation = await Invitation.findOne({

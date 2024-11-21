@@ -103,27 +103,74 @@ exports.deleteCard = asyncHandler(async (req, res) => {
   }
 });
 
-// Add a comment to a card
 exports.addComment = asyncHandler(async (req, res) => {
   const card = await Card.findById(req.params.id);
-  if (card) {
-    const { text } = req.body;
-    card.comments.push({ text });
-    await card.save();
-    res.json(card);
-  } else {
-    res.status(404).json({ message: 'Card not found' });
+  if (!card) {
+    return res.status(404).json({ message: 'Card not found' });
   }
+
+  const { text } = req.body;
+  
+  card.comments.push({ 
+    text,
+    userId: req.user._id
+  });
+
+  await card.save();
+
+  // Always populate user info
+  const populatedCard = await Card.findById(card._id)
+    .populate('comments.userId', 'name email');
+  
+  res.json(populatedCard);
 });
 
-// Delete a comment from a card
 exports.deleteComment = asyncHandler(async (req, res) => {
   const card = await Card.findById(req.params.cardId);
-  if (card) {
-    card.comments = card.comments.filter(comment => comment._id.toString() !== req.params.commentId);
-    await card.save();
-    res.json(card);
-  } else {
-    res.status(404).json({ message: 'Card not found' });
+  if (!card) {
+    return res.status(404).json({ message: 'Card not found' });
   }
+
+  const comment = card.comments.id(req.params.commentId);
+  if (!comment) {
+    return res.status(404).json({ message: 'Comment not found' });
+  }
+
+  if (!comment.userId.equals(req.user._id) && !req.board.owner.equals(req.user._id)) {
+    return res.status(403).json({ message: 'Not authorized to delete this comment' });
+  }
+
+  card.comments.pull({ _id: req.params.commentId });
+  await card.save();
+
+  // Always populate user info
+  const populatedCard = await Card.findById(card._id)
+    .populate('comments.userId', 'name email');
+  
+  res.json(populatedCard);
 });
+
+// // Add a comment to a card
+// exports.addComment = asyncHandler(async (req, res) => {
+//   const card = await Card.findById(req.params.id);
+//   if (card) {
+//     const { text } = req.body;
+//     card.comments.push({ text });
+//     await card.save();
+//     res.json(card);
+//   } else {
+//     res.status(404).json({ message: 'Card not found' });
+//   }
+// });
+
+// // Delete a comment from a card
+// exports.deleteComment = asyncHandler(async (req, res) => {
+//   const card = await Card.findById(req.params.cardId);
+//   if (card) {
+//     card.comments = card.comments.filter(comment => comment._id.toString() !== req.params.commentId);
+//     await card.save();
+//     res.json(card);
+//   } else {
+//     res.status(404).json({ message: 'Card not found' });
+//   }
+// });

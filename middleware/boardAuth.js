@@ -148,3 +148,55 @@ exports.canComment = async (req, res, next) => {
     res.status(500).json({ message: 'Error checking comment authorization' });
   }
 };
+
+
+exports.canDeleteComment = async (req, res, next) => {
+  try {
+    const { cardId, commentId } = req.params;
+    
+    // Find the card and the specific comment
+    const card = await Card.findById(cardId);
+    if (!card) {
+      return res.status(404).json({ message: 'Card not found' });
+    }
+
+    // Find the comment in the card's comments array
+    const comment = card.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    // Check board access
+    const board = await Board.findOne({
+      _id: card.boardId,
+      $or: [
+        { owner: req.user._id },
+        { collaborators: req.user._id }
+      ]
+    });
+
+    if (!board) {
+      return res.status(403).json({ message: 'Not authorized to access this card' });
+    }
+
+    // If user is board owner, allow delete of any comment
+    if (board.owner.equals(req.user._id)) {
+      req.card = card;
+      req.comment = comment;
+      return next();
+    }
+
+    // If user is comment creator, allow delete
+    // Note: You'll need to add a userId field to your comment schema for this to work
+    if (comment.userId && comment.userId.equals(req.user._id)) {
+      req.card = card;
+      req.comment = comment;
+      return next();
+    }
+
+    return res.status(403).json({ message: 'Not authorized to delete this comment' });
+  } catch (error) {
+    console.error('Error in canDeleteComment middleware:', error);
+    res.status(500).json({ message: 'Error checking comment delete authorization' });
+  }
+};

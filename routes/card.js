@@ -23,6 +23,6 @@ router.delete('/:id', authenticateJWT, boardAuth.canAccessCard, cardController.d
 router.post('/:id/comments', authenticateJWT, boardAuth.canComment, cardController.addComment);
 
 // Delete a comment from a specific card
-router.delete('/:cardId/comments/:commentId', authenticateJWT, boardAuth.canAccessCard, cardController.deleteComment);
+router.delete('/:cardId/comments/:commentId', authenticateJWT, boardAuth.canDeleteComment, cardController.deleteComment);
 
 module.exports = router;

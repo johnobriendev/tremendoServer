@@ -117,7 +117,7 @@ exports.canManageInvitation = async (req, res, next) => {
       return res.status(404).json({ message: 'Invitation not found' });
     }
 
-    if (invitation.recipientEmail !== req.user.email) {
+    if (!invitation.invitee.equals(req.user._id)) {
       return res.status(403).json({ message: 'Not authorized to manage this invitation' });
     }
 

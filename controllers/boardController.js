@@ -71,11 +71,27 @@ exports.createBoard = [
 ];
 
 // Get a specific board by ID
-exports.getBoardById = asyncHandler(async (req, res) => {
-  const board = await Board.findById(req.params.id);
+// exports.getBoardById = asyncHandler(async (req, res) => {
+//   const board = await Board.findById(req.params.id);
 
-  if (!board || board.owner.toString() !== req.user._id.toString()) {
-    res.status(404).json({ message: 'Board not found' });
+//   if (!board || board.owner.toString() !== req.user._id.toString()) {
+//     res.status(404).json({ message: 'Board not found' });
+//     return;
+//   }
+
+//   res.json(board);
+// });
+exports.getBoardById = asyncHandler(async (req, res) => {
+  const board = await Board.findOne({
+    _id: req.params.id,
+    $or: [
+      { owner: req.user._id },
+      { collaborators: req.user._id }
+    ]
+  });
+
+  if (!board) {
+    res.status(404).json({ message: 'Board not found or access denied' });
     return;
   }
 
@@ -152,7 +168,7 @@ exports.getAllBoards = asyncHandler(async (req, res) => {
 
 exports.getBoardDetails = async (req, res) => {
   try {
-    const board = req.board; // This comes from the boardAuth middleware
+    const board = req.board; 
     const lists = await List.find({ boardId: board._id });
     const cards = await Card.find({ boardId: board._id });
 

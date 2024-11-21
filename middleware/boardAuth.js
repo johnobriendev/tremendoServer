@@ -83,13 +83,8 @@ exports.canAccessCard = async (req, res, next) => {
       return res.status(404).json({ message: 'Card not found' });
     }
 
-    const list = await List.findById(card.listId);
-    if (!list) {
-      return res.status(404).json({ message: 'List not found' });
-    }
-
     const board = await Board.findOne({
-      _id: list.boardId,
+      _id: card.boardId,
       $or: [
         { owner: req.user._id },
         { collaborators: req.user._id }
@@ -101,7 +96,6 @@ exports.canAccessCard = async (req, res, next) => {
     }
 
     req.card = card;
-    req.list = list;
     req.board = board;
     next();
   } catch (error) {
@@ -125,5 +119,32 @@ exports.canManageInvitation = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(500).json({ message: 'Error checking invitation access' });
+  }
+};
+
+exports.canComment = async (req, res, next) => {
+  try {
+    const card = await Card.findById(req.params.id);
+    if (!card) {
+      return res.status(404).json({ message: 'Card not found' });
+    }
+
+    const board = await Board.findOne({
+      _id: card.boardId,
+      $or: [
+        { owner: req.user._id },
+        { collaborators: req.user._id }
+      ]
+    });
+
+    if (!board) {
+      return res.status(403).json({ message: 'Not authorized to comment on this card' });
+    }
+
+    req.card = card;
+    req.board = board;
+    next();
+  } catch (error) {
+    res.status(500).json({ message: 'Error checking comment authorization' });
   }
 };

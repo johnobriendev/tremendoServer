@@ -20,7 +20,7 @@ router.put('/:id', authenticateJWT, boardAuth.canAccessCard, cardController.upda
 router.delete('/:id', authenticateJWT, boardAuth.canAccessCard, cardController.deleteCard);
 
 // Add a comment to a specific card
-router.post('/:id/comments', authenticateJWT, boardAuth.canAccessCard, cardController.addComment);
+router.post('/:id/comments', authenticateJWT, boardAuth.canComment, cardController.addComment);
 
 // Delete a comment from a specific card
 router.delete('/:cardId/comments/:commentId', authenticateJWT, boardAuth.canAccessCard, cardController.deleteComment);

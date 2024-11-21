@@ -2,6 +2,7 @@
 const express = require('express');
 const invitationController = require('../controllers/invitationController');
 const { authenticateJWT } = require('../middleware/auth');
+const boardAuth = require('../middleware/boardAuth');
 
 const router = express.Router();
 

@@ -64,246 +64,96 @@ FRONTEND_URL=http://localhost:3000
     npm start
     ```
 
-## API Documentation
+## API Endpoints
 
-### Authentication
-All protected routes require a JWT token in the Authorization header:
-```
-Authorization: Bearer <your_jwt_token>
-```
+### User Routes
+- **POST /register**
+  - Register a new user (rate-limited)
+  - Public access
 
-### User Management
-|
- Endpoint 
-|
- Method 
-|
- Description 
-|
- Auth Required 
-|
-|
-----------
-|
----------
-|
--------------
-|
----------------
-|
-|
-`/register`
-|
- POST 
-|
- Register new user 
-|
- No 
-|
-|
-`/login`
-|
- POST 
-|
- Authenticate user 
-|
- No 
-|
-|
-`/verify-email`
-|
- GET 
-|
- Verify email address 
-|
- No 
-|
-|
-`/request-password-reset`
-|
- POST 
-|
- Request password reset 
-|
- No 
-|
-|
-`/reset-password`
-|
- POST 
-|
- Reset password 
-|
- No 
-|
+- **POST /login**
+  - Log in a user
+  - Public access
 
-### Board Management
-|
- Endpoint 
-|
- Method 
-|
- Description 
-|
- Auth Required 
-|
-|
-----------
-|
----------
-|
--------------
-|
----------------
-|
-|
-`/boards`
-|
- GET 
-|
- Get user's boards 
-|
- Yes 
-|
-|
-`/boards`
-|
- POST 
-|
- Create new board 
-|
- Yes 
-|
-|
-`/boards/:id`
-|
- GET 
-|
- Get board details 
-|
- Yes 
-|
-|
-`/boards/:id`
-|
- PUT 
-|
- Update board 
-|
- Yes 
-|
-|
-`/boards/:id`
-|
- DELETE 
-|
- Delete board 
-|
- Yes 
-|
+- **GET /verify-email**
+  - Verify a user's email
+  - Public access
 
-### Lists and Cards
-|
- Endpoint 
-|
- Method 
-|
- Description 
-|
- Auth Required 
-|
-|
-----------
-|
----------
-|
--------------
-|
----------------
-|
-|
-`/lists/:boardId`
-|
- GET 
-|
- Get board lists 
-|
- Yes 
-|
-|
-`/lists/:boardId`
-|
- POST 
-|
- Create new list 
-|
- Yes 
-|
-|
-`/cards/:boardId/cards`
-|
- GET 
-|
- Get board cards 
-|
- Yes 
-|
-|
-`/cards/:boardId/cards`
-|
- POST 
-|
- Create new card 
-|
- Yes 
-|
+- **POST /request-password-reset**
+  - Request a password reset link
+  - Public access
 
-### Collaboration
-|
- Endpoint 
-|
- Method 
-|
- Description 
-|
- Auth Required 
-|
-|
-----------
-|
----------
-|
--------------
-|
----------------
-|
-|
-`/invitations/boards/:boardId/invite`
-|
- POST 
-|
- Invite user 
-|
- Yes 
-|
-|
-`/invitations`
-|
- GET 
-|
- Get invitations 
-|
- Yes 
-|
-|
-`/invitations/:invitationId/respond`
-|
- POST 
-|
- Respond to invite 
-|
- Yes 
-|
+- **POST /reset-password**
+  - Reset a user's password
+  - Public access
+
+### Board Routes
+- **GET /boards**
+  - Get all boards for authenticated user
+  - Requires authentication
+
+- **POST /boards**
+  - Create a new board
+  - Requires authentication
+
+- **GET /boards/:id**
+  - Get specific board details
+  - Requires authentication
+
+- **PUT /boards/:id**
+  - Update a board
+  - Requires authentication
+
+- **DELETE /boards/:id**
+  - Delete a board
+  - Requires authentication
+
+### List Routes
+- **GET /lists/:boardId**
+  - Get all lists within a board
+  - Requires authentication
+
+- **POST /lists/:boardId**
+  - Create a new list
+  - Requires authentication
+
+- **PUT /lists/:id**
+  - Update a list
+  - Requires authentication
+
+- **DELETE /lists/:id**
+  - Delete a list
+  - Requires authentication
+
+### Card Routes
+- **GET /cards/:boardId/cards**
+  - Get all cards within a board
+  - Requires authentication
+
+- **POST /cards/:boardId/cards**
+  - Create a new card
+  - Requires authentication
+
+- **PUT /cards/:id**
+  - Update a card
+  - Requires authentication
+
+- **DELETE /cards/:id**
+  - Delete a card
+  - Requires authentication
+
+### Invitation Routes
+- **POST /invitations/boards/:boardId/invite**
+  - Invite a user to a board
+  - Requires authentication
+
+- **GET /invitations**
+  - Get all pending invitations
+  - Requires authentication
+
+- **POST /invitations/:invitationId/respond**
+  - Accept or reject an invitation
+  - Requires authentication
 
 ## Security Features
 

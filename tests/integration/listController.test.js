@@ -23,7 +23,6 @@ describe('List Controller', () => {
   });
 
   afterAll(async () => {
-    await mongoose.connection.db.dropDatabase();
     await mongoose.disconnect();
   });
 

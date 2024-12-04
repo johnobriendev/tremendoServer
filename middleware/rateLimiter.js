@@ -1,7 +1,7 @@
 const rateLimit = require('express-rate-limit');
 
 
-const rateLimit = require('express-rate-limit');
+
 
 const rateLimiter = {
   // Keep your existing register limiter

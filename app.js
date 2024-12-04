@@ -5,6 +5,7 @@ const passport = require('passport');
 const compression = require('compression');
 const helmet = require("helmet");
 require('dotenv').config();
+const rateLimiter = require('./middleware/rateLimiter');
 
 
 // Import the routes
@@ -44,13 +45,7 @@ app.set('trust proxy', 1);
 
 // Middleware
 
-const RateLimit = require("express-rate-limit");
-const limiter = RateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100,
-});
-// Apply rate limiter to all requests
-app.use(limiter);
+
 app.use(cors());
 app.use(express.json());
 app.use(compression());
@@ -61,11 +56,22 @@ require('./config/passport');
 
 
 // Routes
-app.use('/users', userRoutes);
-app.use('/boards', boardRoutes);
-app.use('/lists', listRoutes);
-app.use('/cards', cardRoutes);
-app.use('/invitations', invitationRoutes);
+
+// Apply register limiter specifically to the registration route
+app.use('/users/register', rateLimiter.register);
+
+// Apply API limiter to all other routes
+app.use('/users', rateLimiter.api, userRoutes);
+app.use('/boards', rateLimiter.api, boardRoutes);
+app.use('/lists', rateLimiter.api, listRoutes);
+app.use('/cards', rateLimiter.api, cardRoutes);
+app.use('/invitations', rateLimiter.api, invitationRoutes);
+
+// app.use('/users', userRoutes);
+// app.use('/boards', boardRoutes);
+// app.use('/lists', listRoutes);
+// app.use('/cards', cardRoutes);
+// app.use('/invitations', invitationRoutes);
 
 
 // Every thrown error in the application or the previous middleware function calling `next` with an error as an argument will eventually go to this middleware function

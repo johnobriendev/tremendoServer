@@ -5,7 +5,7 @@ const { authenticateJWT } = require('../middleware/auth');
 const registerLimiter = require('../middleware/rateLimiter');
 
 
-router.post('/register', registerLimiter, userController.registerUser);
+router.post('/register', userController.registerUser);
 router.post('/login', userController.loginUser);
 router.post('/request-password-reset', userController.requestPasswordReset);
 router.post('/reset-password', userController.resetPassword);

@@ -38,7 +38,6 @@ exports.getCardById = asyncHandler(async (req, res) => {
   }
 });
 
-// // Update a card
 exports.updateCard = [
   body('name').optional().isString().trim(),
   body('description').optional().isString().trim().escape(),
@@ -56,9 +55,6 @@ exports.updateCard = [
       return res.status(404).json({ message: 'Card not found' });
     }
 
-    const originalListId = card.listId;
-    const originalPosition = card.position;
-
     if (req.body.name !== undefined) card.name = req.body.name;
     if (req.body.description !== undefined) card.description = req.body.description;
     if (req.body.position !== undefined) card.position = req.body.position;
@@ -66,31 +62,63 @@ exports.updateCard = [
     card.updatedAt = Date.now();
 
     await card.save();
-
-    // If position or listId changed, reorder cards
-    if (req.body.position !== undefined || req.body.listId !== undefined) {
-      // Reorder cards in the original list
-      if (originalListId !== card.listId || originalPosition !== card.position) {
-        await reorderCards(originalListId);
-      }
-
-      // If the card moved to a different list, reorder cards in the new list too
-      if (originalListId !== card.listId) {
-        await reorderCards(card.listId);
-      }
-    }
-
     res.json(card);
   }),
 ];
 
-async function reorderCards(listId) {
-  const cardsInList = await Card.find({ listId }).sort('position');
-  for (let i = 0; i < cardsInList.length; i++) {
-    cardsInList[i].position = i + 1;
-    await cardsInList[i].save();
-  }
-}
+// // Update a card
+// exports.updateCard = [
+//   body('name').optional().isString().trim(),
+//   body('description').optional().isString().trim().escape(),
+//   body('position').optional().isInt().withMessage('Position must be an integer'),
+//   body('listId').optional().isMongoId().withMessage('List ID must be a valid Mongo ID'),
+
+//   asyncHandler(async (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
+
+//     const card = await Card.findById(req.params.id);
+//     if (!card) {
+//       return res.status(404).json({ message: 'Card not found' });
+//     }
+
+//     const originalListId = card.listId;
+//     const originalPosition = card.position;
+
+//     if (req.body.name !== undefined) card.name = req.body.name;
+//     if (req.body.description !== undefined) card.description = req.body.description;
+//     if (req.body.position !== undefined) card.position = req.body.position;
+//     if (req.body.listId !== undefined) card.listId = req.body.listId;
+//     card.updatedAt = Date.now();
+
+//     await card.save();
+
+//     // If position or listId changed, reorder cards
+//     if (req.body.position !== undefined || req.body.listId !== undefined) {
+//       // Reorder cards in the original list
+//       if (originalListId !== card.listId || originalPosition !== card.position) {
+//         await reorderCards(originalListId);
+//       }
+
+//       // If the card moved to a different list, reorder cards in the new list too
+//       if (originalListId !== card.listId) {
+//         await reorderCards(card.listId);
+//       }
+//     }
+
+//     res.json(card);
+//   }),
+// ];
+
+// async function reorderCards(listId) {
+//   const cardsInList = await Card.find({ listId }).sort('position');
+//   for (let i = 0; i < cardsInList.length; i++) {
+//     cardsInList[i].position = i + 1;
+//     await cardsInList[i].save();
+//   }
+// }
 
 // Delete a card
 exports.deleteCard = asyncHandler(async (req, res) => {

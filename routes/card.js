@@ -25,6 +25,7 @@ router.post('/:id/comments', authenticateJWT, boardAuth.canComment, cardControll
 // Delete a comment from a specific card
 router.delete('/:cardId/comments/:commentId', authenticateJWT, boardAuth.canDeleteComment, cardController.deleteComment);
 
+//bulk update to update all cards after dragEnd
 router.put('/batch-update', authenticateJWT, boardAuth.canAccessBoard, cardController.updateBatchCards);
 
 module.exports = router;

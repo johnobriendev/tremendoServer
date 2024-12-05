@@ -281,27 +281,26 @@ exports.requestPasswordReset = [
 
     try {
       await resend.emails.send({
-        from: 'support@tremendo.pro',
+        from: 'Tremendo Support <support@tremendo.pro>',
         to: email,
         subject: 'Password Reset - Tremendo',
         html: `
-          <h2>Password Reset Request</h2>
-          <p>You recently requested to reset your password for your Tremendo account.</p>
-          
-          <p><strong>Click the button below to reset your password:</strong></p>
-          <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
-          
-          <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
-          <p style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">
-            ${resetLink}
-          </p>
-          
-          <p><em>This password reset link will expire in 1 hour.</em></p>
-          
-          <p>If you did not request a password reset, please ignore this email or contact our support team if you have concerns.</p>
-          
-          <p>Need help? Contact our support team at support@tremendo.pro</p>
+          <p>You requested to reset your password.</p>
+          <p><a href="${resetLink}">Click here to reset your password</a></p>
+          <p>Or copy this link: ${resetLink}</p>
+          <p>This link will expire in 1 hour.</p>
+          <p>Need help? Contact support@tremendo.pro</p>
+        `,
+        text: `
+        You requested to reset your password.
+
+        Click here to reset your password: ${resetLink}
+
+        This link will expire in 1 hour.
+
+        Need help? Contact support@tremendo.pro
         `
+
       });
       res.status(200).json({ message: 'Password reset email sent' });
     } catch (error) {

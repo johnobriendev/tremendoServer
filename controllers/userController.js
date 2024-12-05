@@ -9,6 +9,11 @@ const crypto = require('crypto');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+
+
+
+
+
 // get user data
 exports.getUserData = asyncHandler(async (req, res) => {
   try {
@@ -78,27 +83,26 @@ exports.registerUser =[
 
     try {
       await resend.emails.send({
-        from: 'support@tremendo.pro',
+        from: 'Tremendo Support <support@tremendo.pro>',
         to: email,
         subject: 'Verify Your Email - Tremendo',
         html: `
-          <h2>Welcome to Tremendo!</h2>
-          <p>Thank you for registering. To complete your account setup, please verify your email address.</p>
-          
-          <p><strong>Click the button below to verify your email:</strong></p>
-          <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Verify Email</a>
-          
-          <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
-          <p style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">
-            ${verificationLink}
-          </p>
-          
-          <p><em>This verification link will expire in 24 hours.</em></p>
-          
-          <p>If you didn't create an account with Tremendo, please ignore this email.</p>
-          
-          <p>Need help? Contact our support team at support@tremendo.pro</p>
-        `
+          <p>Thank you for registering. Please verify your email address.</p>
+          <p><a href="${verificationLink}">Click here to verify your email</a></p>
+          <p>Or copy this link: ${verificationLink}</p>
+          <p>This verification link will expire in 24 hours.</p>
+          <p>Need help? Contact support@tremendo.pro</p>
+        `,
+        text: `
+        Thank you for registering. Please verify your email address.
+        
+        Click here to verify your email: ${verificationLink}
+        
+        This verification link will expire in 24 hours.
+        
+        Need help? Contact support@tremendo.pro
+            `
+
       });
 
 
@@ -169,27 +173,25 @@ exports.resendVerification = asyncHandler(async (req, res) => {
 
   try {
     await resend.emails.send({
-      from: 'support@tremendo.pro',
+      from: 'Tremndo Support <support@tremendo.pro>',
       to: email,
       subject: 'Verify Your Email - Tremendo',
       html: `
-        <h2>Email Verification Reminder</h2>
-        <p>You recently requested a new verification link for your Tremendo account.</p>
-        
-        <p><strong>Click the button below to verify your email:</strong></p>
-        <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Verify Email</a>
-        
-        <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
-        <p style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all;">
-          ${verificationLink}
-        </p>
-        
-        <p><em>This verification link will expire in 24 hours.</em></p>
-        
-        <p>If you didn't request this verification email, please ignore it or contact our support team.</p>
-        
-        <p>Need help? Contact our support team at support@tremendo.pro</p>
-      `
+        <p>You requested a new verification link for your account.</p>
+        <p><a href="${verificationLink}">Click here to verify your email</a></p>
+        <p>Or copy this link: ${verificationLink}</p>
+        <p>This verification link will expire in 24 hours.</p>
+        <p>Need help? Contact support@tremendo.pro</p>
+      `,
+      text: `
+      You requested a new verification link for your account.
+
+      Click here to verify your email: ${verificationLink}
+
+      This verification link will expire in 24 hours.
+
+      Need help? Contact support@tremendo.pro
+    `
     });
 
     res.status(200).json({ message: 'Verification email resent successfully' });

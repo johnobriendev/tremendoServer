@@ -60,6 +60,10 @@ require('./config/passport');
 // Apply register limiter specifically to the registration route
 app.use('/users/register', rateLimiter.register);
 
+// Apply email operations limiter to email-sensitive routes
+app.use('/users/resend-verification', rateLimiter.emailOperations);
+app.use('/users/reset-password', rateLimiter.emailOperations);
+
 // Apply API limiter to all other routes
 app.use('/users', rateLimiter.api, userRoutes);
 app.use('/boards', rateLimiter.api, boardRoutes);

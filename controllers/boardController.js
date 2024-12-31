@@ -70,17 +70,7 @@ exports.createBoard = [
   }),
 ];
 
-// Get a specific board by ID
-// exports.getBoardById = asyncHandler(async (req, res) => {
-//   const board = await Board.findById(req.params.id);
 
-//   if (!board || board.owner.toString() !== req.user._id.toString()) {
-//     res.status(404).json({ message: 'Board not found' });
-//     return;
-//   }
-
-//   res.json(board);
-// });
 exports.getBoardById = asyncHandler(async (req, res) => {
   const board = await Board.findOne({
     _id: req.params.id,

@@ -9,11 +9,6 @@ const crypto = require('crypto');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-
-
-
-
-
 // get user data
 exports.getUserData = asyncHandler(async (req, res) => {
   try {
@@ -102,9 +97,7 @@ exports.registerUser =[
         
         Need help? Contact support@tremendo.pro
             `
-
       });
-
 
       res.status(201).json({
         _id: user._id,
@@ -138,8 +131,6 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
     }
 
     user.isVerified = true;
-    // user.verificationToken = undefined;  //take these out so the front end can see if the token has been verified
-    // user.verificationTokenExpires = undefined; //if the tokens are deleted the FE sees no token and throws error even though the verification was successful
     await user.save();
 
     res.status(200).json({ success: true, message: 'Email verified successfully' });
@@ -222,22 +213,73 @@ exports.loginUser = [
         return res.status(401).json({ message: 'Please verify your email before logging in' });
       }
       
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-      });
+      // Generate access token (1 hour for production)
+      const accessToken = jwt.sign(
+        { id: user._id }, 
+        process.env.JWT_SECRET, 
+        { expiresIn: process.env.NODE_ENV === 'development' ? '30s' : '1h' }
+      );
+
+      // Generate refresh token
+      const refreshToken = jwt.sign(
+        { id: user._id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: process.env.NODE_ENV === 'development' ? '2m' : '7d' }
+      );
+
+      // Save refresh token to user
+      user.refreshToken = refreshToken;
+      await user.save();
+
       res.json({
-        token,
+        accessToken,
+        refreshToken,
         user: {  
           id: user._id,
           name: user.name,
           email: user.email
-        } //not sure if this should be included
+        } 
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
   })
 ];
+
+
+exports.refreshToken = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+  
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token required' });
+  }
+
+  try {
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+    // Find user with this refresh token
+    const user = await User.findOne({ 
+      _id: decoded.id,
+      refreshToken: refreshToken
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid refresh token' });
+    }
+
+    // Generate new access token
+    const accessToken = jwt.sign(
+      { id: user._id }, 
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.NODE_ENV === 'development' ? '30s' : '1h' }
+    );
+
+    res.json({ accessToken });
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid refresh token' });
+  }
+});
 
 
 exports.requestPasswordReset = [
@@ -367,7 +409,17 @@ exports.resetPassword = [
 
 // User logout
 exports.logoutUser = asyncHandler(async (req, res) => {
-  res.status(200).json({ message: 'Logout successful' });
+  const { refreshToken } = req.body;
+  
+  if (refreshToken) {
+    // Find user with this refresh token and remove it
+    await User.findOneAndUpdate(
+      { refreshToken },
+      { refreshToken: null }
+    );
+  }
+  
+  res.json({ message: 'Logged out successfully' });
 });
 
 

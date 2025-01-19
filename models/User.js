@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
   verificationToken: { type: String },
   verificationTokenExpires: { type: Date },
   resetPasswordToken: { type: String },
-  resetPasswordExpires: { type: Date }
+  resetPasswordExpires: { type: Date },
+  refreshToken: { type: String, default: null}
 });
 
 const User = mongoose.model('User', userSchema);

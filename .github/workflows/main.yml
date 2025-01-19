@@ -12,6 +12,7 @@ env:
   
   MONGODB_URI_TEST: ${{ secrets.MONGODB_URI_TEST }}
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }} 
   RECAPTCHA_SECRET_KEY: ${{ secrets.RECAPTCHA_SECRET_KEY }}
   RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
   

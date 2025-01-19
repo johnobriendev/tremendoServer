@@ -147,7 +147,8 @@ describe('User Controller', () => {
         });
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('token');
+      expect(res.body).toHaveProperty('accessToken');
+      expect(res.body).toHaveProperty('refreshToken'); 
       expect(res.body).toHaveProperty('user');
       expect(res.body.user.email).toBe('test@example.com');
     });
@@ -348,7 +349,8 @@ describe('User Controller', () => {
         });
 
       expect(loginRes.status).toBe(200);
-      expect(loginRes.body).toHaveProperty('token');
+      expect(loginRes.body).toHaveProperty('accessToken');
+      expect(loginRes.body).toHaveProperty('refreshToken');
       expect(loginRes.body).toHaveProperty('user');
       expect(loginRes.body.user.email).toBe('test@example.com');
     });

@@ -24,13 +24,13 @@ exports.createCard = [
 
 // Get all cards
 exports.getCards = asyncHandler(async (req, res) => {
-  const cards = await Card.find({ boardId: req.params.boardId });
+  const cards = await Card.find({ boardId: req.params.boardId }).populate('comments.userId', 'name email');
   res.json(cards);
 });
 
 // Get a single card by ID
 exports.getCardById = asyncHandler(async (req, res) => {
-  const card = await Card.findById(req.params.id);
+  const card = await Card.findById(req.params.id).populate('comments.userId', 'name email');
   if (card) {
     res.json(card);
   } else {

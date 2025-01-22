@@ -217,14 +217,14 @@ exports.loginUser = [
       const accessToken = jwt.sign(
         { id: user._id }, 
         process.env.JWT_SECRET, 
-        { expiresIn: process.env.NODE_ENV === 'development' ? '30s' : '1h' }
+        { expiresIn: process.env.NODE_ENV === 'development' ? '1d' : '1h' }
       );
 
       // Generate refresh token
       const refreshToken = jwt.sign(
         { id: user._id },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: process.env.NODE_ENV === 'development' ? '2m' : '7d' }
+        { expiresIn: process.env.NODE_ENV === 'development' ? '7d' : '7d' }
       );
 
       // Save refresh token to user
